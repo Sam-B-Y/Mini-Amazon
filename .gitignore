@@ -2,6 +2,12 @@
 __pycache__/
 *.py[cod]
 *$py.class
+**/*~
+**/__pycache__
+**/.venv
+poetry.lock
+
+.flaskenv
 
 # C extensions
 *.so
