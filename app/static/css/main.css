@@ -1,5 +1,5 @@
 section {
-  color: #fff;
+  color: #000;
   text-align: center;
 }
 
@@ -23,18 +23,19 @@ section {
 }
 
 body {
-  font-family: "Lato", sans-serif;
+  font-family: "Source Sans Pro", sans-serif;
+  color: #fff;
+  background-color: #000;
 }
 
 .main-head {
   height: 150px;
-  background: #fff;
+  background: #000;
 }
 
 .navbar {
   height: 100%;
-  background-color: #000;
-  overflow-x: hidden;
+  background-color: #120e0d;
   padding: 20px;
 }
 
@@ -55,4 +56,26 @@ body {
 .btn-black {
   background-color: #000 !important;
   color: #fff;
+}
+
+h1 {
+  font-size: 2em;
+}
+
+.searchbar {
+  flex-grow: 1;
+  margin-left: 60px;
+  margin-right: 60px;
+}
+
+.input-form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+}
+
+.input-form input {
+  width: 100%;
 }

@@ -13,14 +13,69 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/main.css') }}"
     />
+    <link
+      href="https://fonts.googleapis.com/css?family=Source+Sans+Pro"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v5.7.0/css/all.css"
+      integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ"
+      crossorigin="anonymous"
+    />
   </head>
 
   <body>
-    <div class="navbar">
-      {% block msg %}
-      <h1 style="color: aliceblue">Code Cartel</h1>
-      <div style="color: aliceblue; text-align: right; margin-bottom: 25px">
-        {% if current_user.is_authenticated %} Hello {{current_user.firstname}}!
+    <div class="navbar d-flex align-items-center justify-content-between">
+      <a href="{{ url_for('index.index') }}">
+        <img
+          src="{{ url_for('static', filename='images/textlogo.jpg') }}"
+          alt="logo"
+          style="height: 100px"
+        />
+      </a>
+
+      <form
+        class="form-inline d-flex searchbar"
+        action="{{ url_for('search.search') }}"
+        method="GET"
+      >
+        <div class="input-group d-flex searchbar">
+          <input
+            class="form-control"
+            type="search"
+            placeholder="Search"
+            aria-label="Search"
+            name="query"
+            style="flex-grow: 1"
+          />
+          <div class="input-group-append">
+            <button class="btn btn-secondary" type="submit">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <div
+        style="
+          color: aliceblue;
+          text-align: right;
+          margin-bottom: 25px;
+          margin: 0;
+        "
+      >
+        {% if current_user.is_authenticated %} Hello {{current_user.full_name}}!
+
+        <a
+          class="btn btn-warning"
+          href="{{ url_for('users.login') }}"
+          style="margin-left: 15px"
+        >
+          <i class="fas fa-shopping-cart"></i>
+          Cart
+        </a>
         <a
           href="{{ url_for('users.logout') }}"
           type="button"
@@ -34,10 +89,16 @@
           class="btn btn-light"
           >Log in</a
         >
+        <a
+          href="{{ url_for('users.register') }}"
+          type="button"
+          class="btn btn-light"
+          >Register</a
+        >
         {% endif %}
       </div>
-      {% endblock %}
     </div>
+
     <div class="main">{% block content %}{% endblock %}</div>
   </body>
 </html>
