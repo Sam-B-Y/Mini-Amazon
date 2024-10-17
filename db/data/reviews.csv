@@ -1,0 +1,3 @@
+review_id,user_id,product_id,seller_id,rating,comment
+1,2,1.0,,4,Great product!
+2,2,,1.0,5,Excellent service!

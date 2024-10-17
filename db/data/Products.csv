@@ -1,6 +1,4 @@
-1,vanilla ice cream,2.99,true
-2,chocolate ice cream,2.99,true
-3,strawberry ice cream,2.99,true
-4,6-pack of paycheck pilsners,11.49,true
-5,seven fabergé easter eggs,1199000.00,true
-6,painting - the storm on the sea of galilee,44000000.00,true
+product_id,category_name,name,description,image_url,price,created_by
+1,Electronics,Smartphone,Latest model smartphone,http://example.com/smartphone.jpg,699.99,1
+2,Books,Learning Python,Comprehensive guide to Python programming,http://example.com/python_book.jpg,39.99,3
+3,Clothing,T-shirt,Cotton t-shirt with cool design,http://example.com/tshirt.jpg,19.99,1
