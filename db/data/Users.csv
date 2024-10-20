@@ -1,4 +1,4 @@
 user_id,email,full_name,address,password_hash,balance,is_seller
-1,alice@example.com,Alice Johnson,123 Main St,hash1,150.0,True
-2,bob@example.com,Bob Smith,456 Elm St,hash2,50.0,False
+1,alice@example.com,Alice Johnson,123 Main St,pbkdf2:sha256:600000$Am4ripEOfCGlnesq$ebf94bbaa2ac0319a9305bde3bce07564d66cb40e5f1223428f9c56e50c879af,150.0,True
+2,bob@example.com,Bob Smith,456 Elm St,pbkdf2:sha256:600000$Am4ripEOfCGlnesq$ebf94bbaa2ac0319a9305bde3bce07564d66cb40e5f1223428f9c56e50c879af,50.0,False
 3,charlie@example.com,Charlie Davis,789 Oak St,hash3,200.0,True
