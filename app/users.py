@@ -55,7 +55,7 @@ class RegistrationForm(FlaskForm):
 
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
-    if current_user.is_authenticated:
+    if current_user.is_authenticated: 
         return redirect(url_for('index.index'))
     form = RegistrationForm()
     if form.validate_on_submit():
@@ -71,4 +71,8 @@ def register():
 @bp.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('index.index'))
+    return redirect(url_for('index.index')) 
+
+@bp.route('/account')
+def view_account():
+    return render_template('account.html', title="View Account")
