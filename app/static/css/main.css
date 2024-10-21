@@ -91,6 +91,7 @@ h1 {
     flex-direction: column;
     flex: 1;
     border-right: 2px solid #fff;
+    margin-right: 1vw;
 }
 
 .form {
@@ -122,4 +123,12 @@ h1 {
 .history {
   padding-right: 3vw;
   flex: 1;
+}
+
+.disabled {
+  pointer-events: none !important;
+}
+
+.form-control:disabled {
+  background-color: #dadde0 !important;
 }
