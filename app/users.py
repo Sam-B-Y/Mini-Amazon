@@ -1,5 +1,5 @@
 from flask import render_template, redirect, url_for, flash, request
-from werkzeug.urls import url_parse
+from werkzeug.urls import url_parse as werkzeug_url_parse
 from flask_login import login_user, logout_user, current_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
@@ -72,3 +72,25 @@ def register():
 def logout():
     logout_user()
     return redirect(url_for('index.index'))
+
+@bp.route('/account', methods=['GET', 'POST'])
+def view_account():
+    id = int(request.cookies.get("id"))
+    user = User.get(id)
+    order_history = User.get_product_history(id)
+
+    if user is None:
+        logout_user()
+        return redirect(url_for('users.login'))
+
+    if request.method == "GET":
+        return render_template('account.html', title="View Account", full_name=user.full_name, 
+                email=user.email, address=user.address, balance=user.balance, order_history=order_history)
+    else:
+        field_id = request.form.get("form_id")
+        field_value = request.form.get(field_id)
+        User.update(id, field_id, field_value)
+        user = User.get(id)
+
+        return render_template('account.html', title="View Account", full_name=user.full_name, 
+                email=user.email, address=user.address, balance=user.balance, order_history=order_history)
