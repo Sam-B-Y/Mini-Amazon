@@ -1,3 +1,6 @@
-review_id,user_id,product_id,seller_id,rating,comment
-1,2,1,,4,Great product!
-2,2,,1,5,Excellent service!
+review_id,user_id,product_id,seller_id,rating,comment,added_at
+1,2,1,1,4,Great product!,2023-10-17 12:30:00
+2,2,4,2,5,Excellent service!,2023-10-17 11:00:00
+3,3,5,3,5,great service!,2023-10-17 11:00:00
+4,2,2,1,5,amazing service!,2023-10-17 11:30:00
+5,2,3,1,5,lit service!,2023-10-17 11:45:00

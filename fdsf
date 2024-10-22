@@ -1,0 +1,4 @@
+ product_id | category_name | name | description | image_url | price | created_by 
+------------+---------------+------+-------------+-----------+-------+------------
+(0 rows)
+
