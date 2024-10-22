@@ -1,6 +1,5 @@
 from flask import current_app as app
 
-
 class Product:
     def __init__(self, product_id, category_name, name, description, image_url, price, created_by):
         self.product_id = product_id
@@ -28,6 +27,27 @@ SELECT product_id, category_name, name, description, image_url, price, created_b
 FROM Products
 ''')
         return [Product(*row) for row in rows]
+
+    @staticmethod
+    def get_top_expensive(k):
+        rows = app.db.execute('''
+            SELECT *
+            FROM Products
+            ORDER BY price DESC
+            LIMIT :k
+        ''', k=k)
+        return [Product(*row) for row in rows]
+
+    def to_dict(self):
+        return {
+            'product_id': self.product_id,
+            'category_name': self.category_name,
+            'name': self.name,
+            'description': self.description,
+            'image_url': self.image_url,
+            'price': self.price,
+            'created_by': self.created_by
+        }
 
 class Category:
     def __init__(self, category_name):

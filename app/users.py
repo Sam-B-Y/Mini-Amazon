@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request, make_response
+from flask import render_template, redirect, url_for, flash, request
 from werkzeug.urls import url_parse
 from flask_login import login_user, logout_user, current_user
 from flask_wtf import FlaskForm
@@ -76,7 +76,7 @@ def register():
 @bp.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('index.index')) 
+    return redirect(url_for('index.index'))
 
 @bp.route('/account', methods=['GET', 'POST'])
 def view_account():
@@ -99,4 +99,3 @@ def view_account():
 
         return render_template('account.html', title="View Account", full_name=user.full_name, 
                 email=user.email, address=user.address, balance=user.balance, order_history=order_history)
-
