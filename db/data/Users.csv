@@ -2,4 +2,4 @@ user_id,email,full_name,address,password_hash,balance,is_seller
 1,alice@example.com,Alice Johnson,123 Main St,pbkdf2:sha256:600000$Am4ripEOfCGlnesq$ebf94bbaa2ac0319a9305bde3bce07564d66cb40e5f1223428f9c56e50c879af,150.0,True
 2,bob@example.com,Bob Smith,456 Elm St,scrypt:32768:8:1$liZVUEOpv69QkEUw$cb412c0dab4035a0c7571911b5df4667372e10df0dd2ae043275e48494b37b71e3b449746c2410c471d799767e4d4997b808489857587b24122baacbb35aa7b9,50.0,False
 3,charlie@example.com,Charlie Davis,789 Oak St,hash3,200.0,True
-4,ben.yan@duke.edu,Ben Yan,100 Duke St,pbkdf2:sha256:600000$10ErThnOV8tini7G$705793a4b05ea34bf1a8fb94af75a01ac0496ced8fdee782be7524fae778959b,100.0,False
+4,ben.yan@duke.edu,Ben Yan,100 Duke St,scrypt:32768:8:1$liZVUEOpv69QkEUw$cb412c0dab4035a0c7571911b5df4667372e10df0dd2ae043275e48494b37b71e3b449746c2410c471d799767e4d4997b808489857587b24122baacbb35aa7b9,100.0,False
