@@ -1,0 +1,33 @@
+{% extends "base.html" %} {% block content %}
+
+<br /><br />
+
+<h2>Your Cart</h2>
+<table class="table table-hover table-bordered container">
+  <thead class="thead-dark">
+    <tr>
+      <th scope="col">Name</th>
+      <th scope="col">Image</th>
+      <th scope="col">Price per Item</th>
+      <th scope="col">Quantity</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in cart_items%}
+    <tr>
+      <th scope="row">{{item.name}}</th>
+      <td>
+        <img
+          src="{{item.image_url}}"
+          alt="Product Image"
+          width="100"
+          height="100"
+        />
+      </td>
+      <td>{{item.price}}</td>
+      <td>{{item.quantity}}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
