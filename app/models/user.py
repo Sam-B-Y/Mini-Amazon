@@ -6,16 +6,17 @@ from .. import login
 
 
 class User(UserMixin):
-    def __init__(self, user_id, email, full_name, address):
+    def __init__(self, user_id, email, full_name, address, balance):
         self.id = user_id
         self.email = email
         self.full_name = full_name
         self.address = address
+        self.balance = balance
 
     @staticmethod
     def get_by_auth(email, password):
         rows = app.db.execute("""
-SELECT password_hash, user_id, email, full_name, address
+SELECT password_hash, user_id, email, full_name, address, balance
 FROM Users
 WHERE email = :email
 """,
@@ -59,12 +60,39 @@ RETURNING user_id
     @login.user_loader
     def get(user_id):
         rows = app.db.execute("""
-SELECT user_id, email, full_name, address
+SELECT user_id, email, full_name, address, balance
 FROM Users
 WHERE user_id = :user_id
 """,
                               user_id=user_id)
         return User(*(rows[0])) if rows else None
+
+    @staticmethod
+    def update(user_id, field, new_value):
+        if field == "balance":
+            try:
+                float(new_value)
+            except ValueError:
+                return None
+
+        if field in ["full_name", "address", "balance"]:
+            app.db.execute(f"""
+    UPDATE users SET {field} = :new_value WHERE user_id=:user_id
+    """, field=field, new_value=new_value, user_id=user_id)
+        
+        return None
+    
+    @staticmethod
+    def get_product_history(user_id):
+        rows = app.db.execute('''
+SELECT name, description, category_name, ordered_time, image_url, quantity, price
+FROM OrderItems
+JOIN Orders ON Orders.order_id = OrderItems.order_id
+JOIN Products ON Products.product_id=OrderItems.product_id                              
+WHERE user_id = :user_id
+''',
+                              user_id=user_id)
+        return rows
 
     def is_seller(user_id):
         rows = app.db.execute('''

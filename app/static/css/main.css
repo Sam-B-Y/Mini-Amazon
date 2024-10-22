@@ -79,3 +79,56 @@ h1 {
 .input-form input {
   width: 100%;
 }
+
+.container-account {
+    display: flex;
+    padding-left: 3vw;
+    height: 35vw;
+}
+
+.info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    border-right: 2px solid #fff;
+    margin-right: 1vw;
+}
+
+.form {
+  display: flex;
+  align-items: stretch;
+  padding-top: 1.5vw;
+}
+
+.label {
+    flex: 2;
+}
+
+.field {
+    flex: 7;
+}
+
+.submit {
+    flex: 1;
+    padding: 0; /* Space for the icon */
+    border: 0;
+    background-color: #000;
+    border-color: #000;
+}
+.submit:focus {
+  border-color: transparent; /* Remove border color on focus */
+  outline: none; /* Optional: remove outline */
+}
+
+.history {
+  padding-right: 3vw;
+  flex: 1;
+}
+
+.disabled {
+  pointer-events: none !important;
+}
+
+.form-control:disabled {
+  background-color: #dadde0 !important;
+}
