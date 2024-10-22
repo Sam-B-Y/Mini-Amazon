@@ -1,10 +1,10 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 from .models.user import User
 from .models.inventory import Inventory
 
 bp = Blueprint('inventory', __name__)
 
-@bp.route('/inventory', methods=['GET'])
+@bp.route('/api/inventory', methods=['GET'])
 def search():
     user_id = request.args.get('user_id')
     if not User.is_seller(user_id):
@@ -24,3 +24,6 @@ def search():
     ]
     return jsonify(inventory_list)
 
+@bp.route('/inventory', methods=['GET'])
+def inventory_page():
+    return render_template('inventory.html')
