@@ -14,41 +14,55 @@
         <form action="/account" method="POST" class="form">
             <input type="hidden" name="form_id" value="full_name">
             <h4 class="label">Full Name: </h4>
-            <div class="field input-group"><input id="full_name" name="full_name" type="text" class="form-control" value="{{full_name}}" required></div>
+            <div class="field input-group"><input id="full_name" name="full_name" type="text" class="form-control"
+                    value="{{full_name}}" required></div>
             <button type="submit" class="submit"><a class="btn btn-secondary"><i class="fa fa-edit"></i></a></button>
         </form>
         <form action="/account" method="POST" class="form">
             <input type="hidden" name="form_id" value="email">
             <h4 class="label">Email: </h4>
-            <div class="field input-group"><input id="email" name="email" type="text" class="form-control" value="{{email}}" disabled></div>
-            <button type="submit" class="submit disabled" disabled><a class="btn btn-secondary"><i class="fa fa-edit"></i></a></button>
+            <div class="field input-group"><input id="email" name="email" type="text" class="form-control"
+                    value="{{email}}" disabled></div>
+            <button type="submit" class="submit disabled" disabled><a class="btn btn-secondary"><i
+                        class="fa fa-edit"></i></a></button>
         </form>
         <form action="/account" method="POST" class="form">
             <input type="hidden" name="form_id" value="address">
             <h4 class="label">Address: </h4>
-            <div class="field input-group"><input id="address" name="address" type="text" class="form-control" value="{{address}}" required></div>
+            <div class="field input-group"><input id="address" name="address" type="text" class="form-control"
+                    value="{{address}}" required></div>
             <button type="submit" class="submit"><a class="btn btn-secondary"><i class="fa fa-edit"></i></a></button>
         </form>
         <form action="/account" method="POST" class="form">
             <input type="hidden" name="form_id" value="balance">
             <h4 class="label">Balance: </h4>
-            <div class="field input-group"><input id="balance" name="balance" type="number" step="0.01" class="form-control" value="{{balance}}" required></div>
+            <div class="field input-group"><input id="balance" name="balance" type="number" step="0.01"
+                    class="form-control" value="{{balance}}" required></div>
             <button type="submit" class="submit"><a class="btn btn-secondary"><i class="fa fa-edit"></i></a></button>
         </form>
-        
-        
-        
     </div>
+
     <div class="history">
         <h1>Purchase History</h1>
         {% for purchase in order_history %}
-
-            {% for line_item in purchase %}
-                <p>{{ line_item }}</p>
-            {% endfor %}
-
+        {% for line_item in purchase %}
+        <p>{{ line_item }}</p>
+        {% endfor %}
         {% endfor %}
     </div>
+
+    <!-- Button to redirect to Most Recent Reviews -->
+    <div class="recent-reviews">
+        <h1>Most Recent Reviews</h1>
+        <button class="btn btn-primary" onclick="redirectToRecentReviews()">View Recent Reviews</button>
+    </div>
 </div>
+
+<script>
+    // Redirect function for Most Recent Reviews Button
+    function redirectToRecentReviews() {
+        window.location.href = "/reviewsrecent";
+    }
+</script>
 
 {% endblock %}
