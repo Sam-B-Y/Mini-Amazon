@@ -24,4 +24,10 @@ def create_app():
     from .search import bp as search_bp
     app.register_blueprint(search_bp)
 
+    from .inventory import bp as inventory_bp
+    app.register_blueprint(inventory_bp)
+    
+    from .cart import bp as cart_bp
+    app.register_blueprint(cart_bp)
+
     return app

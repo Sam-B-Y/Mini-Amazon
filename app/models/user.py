@@ -66,7 +66,7 @@ WHERE user_id = :user_id
 """,
                               user_id=user_id)
         return User(*(rows[0])) if rows else None
-    
+
     @staticmethod
     def update(user_id, field, new_value):
         if field == "balance":
@@ -93,3 +93,11 @@ WHERE user_id = :user_id
 ''',
                               user_id=user_id)
         return rows
+
+    def is_seller(user_id):
+        rows = app.db.execute('''
+            SELECT *
+            FROM Users
+            WHERE user_id = :user_id AND is_seller = TRUE
+        ''', user_id=user_id)
+        return len(rows) == 1

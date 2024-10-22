@@ -99,3 +99,4 @@ def view_account():
 
         return render_template('account.html', title="View Account", full_name=user.full_name, 
                 email=user.email, address=user.address, balance=user.balance, order_history=order_history)
+
