@@ -1,4 +1,4 @@
 product_id,category_name,name,description,image_url,price,created_by
-1,Electronics,Smartphone,Latest model smartphone,http://example.com/smartphone.jpg,699.99,1
-2,Books,Learning Python,Comprehensive guide to Python programming,http://example.com/python_book.jpg,39.99,3
-3,Clothing,T-shirt,Cotton t-shirt with cool design,http://example.com/tshirt.jpg,19.99,1
+1,Electronics,Smartphone,Latest model smartphone,https://picsum.photos/200,699.99,1
+2,Books,Learning Python,Comprehensive guide to Python programming,https://picsum.photos/200,39.99,3
+3,Clothing,T-shirt,Cotton t-shirt with cool design,https://picsum.photos/200,19.99,1
