@@ -35,7 +35,11 @@ def login():
         if not next_page or url_parse(next_page).netloc != '':
             next_page = url_for('index.index')
 
-        return redirect(next_page)
+        redirect_response = make_response(redirect(next_page))
+        redirect_response.set_cookie("id", str(user.id))
+
+        return redirect_response
+
     return render_template('login.html', title='Sign In', form=form)
 
 
@@ -43,6 +47,7 @@ class RegistrationForm(FlaskForm):
     firstname = StringField('First Name', validators=[DataRequired()])
     lastname = StringField('Last Name', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
+    address = StringField('Address', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     password2 = PasswordField(
         'Repeat Password', validators=[DataRequired(),
@@ -56,14 +61,14 @@ class RegistrationForm(FlaskForm):
 
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
-    if current_user.is_authenticated:
+    if current_user.is_authenticated: 
         return redirect(url_for('index.index'))
     form = RegistrationForm()
     if form.validate_on_submit():
         if User.register(form.email.data,
                          form.password.data,
-                         form.firstname.data,
-                         form.lastname.data):
+                         str.strip(form.firstname.data) + " " + str.strip(form.lastname.data),
+                         form.address.data):
             flash('Congratulations, you are now a registered user!')
             return redirect(url_for('users.login'))
     return render_template('register.html', title='Register', form=form)
@@ -73,3 +78,25 @@ def register():
 def logout():
     logout_user()
     return redirect(url_for('index.index'))
+
+@bp.route('/account', methods=['GET', 'POST'])
+def view_account():
+    id = int(request.cookies.get("id"))
+    user = User.get(id)
+    order_history = User.get_product_history(id)
+
+    if user is None:
+        logout_user()
+        return redirect(url_for('users.login'))
+
+    if request.method == "GET":
+        return render_template('account.html', title="View Account", full_name=user.full_name, 
+                email=user.email, address=user.address, balance=user.balance, order_history=order_history)
+    else:
+        field_id = request.form.get("form_id")
+        field_value = request.form.get(field_id)
+        User.update(id, field_id, field_value)
+        user = User.get(id)
+
+        return render_template('account.html', title="View Account", full_name=user.full_name, 
+                email=user.email, address=user.address, balance=user.balance, order_history=order_history)
