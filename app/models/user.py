@@ -65,3 +65,11 @@ WHERE user_id = :user_id
 """,
                               user_id=user_id)
         return User(*(rows[0])) if rows else None
+
+    def is_seller(user_id):
+        rows = app.db.execute('''
+            SELECT *
+            FROM Users
+            WHERE user_id = :user_id AND is_seller = TRUE
+        ''', user_id=user_id)
+        return len(rows) == 1
