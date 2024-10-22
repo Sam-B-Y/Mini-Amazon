@@ -40,7 +40,14 @@
         
     </div>
     <div class="history">
-        <h1>todo account history</h1>
+        <h1>Purchase History</h1>
+        {% for purchase in order_history %}
+
+            {% for line_item in purchase %}
+                <p>{{ line_item }}</p>
+            {% endfor %}
+
+        {% endfor %}
     </div>
 </div>
 

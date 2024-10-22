@@ -81,3 +81,15 @@ WHERE user_id = :user_id
     """, field=field, new_value=new_value, user_id=user_id)
         
         return None
+    
+    @staticmethod
+    def get_product_history(user_id):
+        rows = app.db.execute('''
+SELECT name, description, category_name, ordered_time, image_url, quantity, price
+FROM OrderItems
+JOIN Orders ON Orders.order_id = OrderItems.order_id
+JOIN Products ON Products.product_id=OrderItems.product_id                              
+WHERE user_id = :user_id
+''',
+                              user_id=user_id)
+        return rows
