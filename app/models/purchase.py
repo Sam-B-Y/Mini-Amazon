@@ -20,7 +20,7 @@ WHERE OrderItems.order_id = :order_id
         return Purchase(*(rows[0])) if rows else None
 
     @staticmethod
-    def get_all_by_user_id_since(user_id, since):
+    def get_all_by_user_id_since(user_id: int, since: str) -> list['Purchase']:
         rows = app.db.execute('''
 SELECT OrderItems.order_id, user_id, product_id, ordered_time
 FROM OrderItems
