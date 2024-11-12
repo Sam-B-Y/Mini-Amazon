@@ -3,6 +3,7 @@ user_id,email,full_name,address,password_hash,balance,is_seller
 2,bob@example.com,Bob Smith,456 Elm St,scrypt:32768:8:1$liZVUEOpv69QkEUw$cb412c0dab4035a0c7571911b5df4667372e10df0dd2ae043275e48494b37b71e3b449746c2410c471d799767e4d4997b808489857587b24122baacbb35aa7b9,50.0,False
 3,charlie@example.com,Charlie Davis,789 Oak St,hash3,200.0,True
 4,ben.yan@duke.edu,Ben Yan,100 Duke St,scrypt:32768:8:1$liZVUEOpv69QkEUw$cb412c0dab4035a0c7571911b5df4667372e10df0dd2ae043275e48494b37b71e3b449746c2410c471d799767e4d4997b808489857587b24122baacbb35aa7b9,100.0,False
+5,yen.ban@duke.edu,Yen Ban,100 Duke St,scrypt:32768:8:1$liZVUEOpv69QkEUw$cb412c0dab4035a0c7571911b5df4667372e10df0dd2ae043275e48494b37b71e3b449746c2410c471d799767e4d4997b808489857587b24122baacbb35aa7b9,100.0,False
 6,lindsay99@example.org,Elizabeth Osborne,"342 Anita Prairie Apt. 309, Smithport, UT 09590",pbkdf2:sha256:600000$90ae7a51c71fe1e48f89e33eb3563ad8$7ac4ddaa1670624d253d6a1940dad5d9dd2468b9e219bfbf8acaae1a82837a7d,8023.05,True
 7,sarah28@example.org,Thomas Williams,"895 Reyes Point Suite 958, Clarkland, KY 60166",pbkdf2:sha256:600000$e5bce21397818ca4f9d3ee5d7d40c3ed$106b09d86bffe14f31c4b8afeb483e3a47cfbda8016cf63199b1dcd56097727c,9011.14,False
 8,sabrina96@example.org,Michelle Doyle,"32697 Brad Shore, North Andrewbury, TX 04034",pbkdf2:sha256:600000$7330dcb40be3e77607bab6cebca28440$b51480b3c40932e751fc5183f2a730a96936f9985c9879fe64f72b003f7177b1,5247.58,True
