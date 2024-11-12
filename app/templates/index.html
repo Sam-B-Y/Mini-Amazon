@@ -4,49 +4,68 @@
 
 <br><br>
 
-<h2>Products for sale:</h2>
-<table class='table table-hover table-bordered container'>
-  <thead class="thead-dark">
-    <tr>
-      <th scope="col">Product ID</th>
-      <th scope="col">Product Name</th>
-      <th scope="col">Price</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for product in avail_products%}
-      <tr>
-        <th scope="row">{{product.id}}</th>
-        <td>{{product.name}}</td>
-        <td>{{product.price}}</td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
+<h2 class="container">Top Expensive Products</h2>
+<div id="products-container" class="container">
+    <table class='table table-hover table-bordered'>
+      <thead class="thead-dark">
+        <tr>
+          <th scope="col">Product ID</th>
+          <th scope="col">Product Name</th>
+          <th scope="col">Price</th>
+        </tr>
+      </thead>
+      <tbody id="product-table-body">
+        <!-- Product rows will be populated by JavaScript -->
+      </tbody>
+    </table>
+</div>
 
-<br><br>
-{% if current_user.is_authenticated %}
-<h2>Your recent purchases:</h2>
-<table class='table table-hover table-bordered container'>
-  <thead class="thead-dark">
-    <tr>
-      <th scope="col">Purchase ID</th>
-      <th scope="col">Product Name</th>
-      <th scope="col">Price</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for purchase in purchase_history%}
-      <tr>
-        <th scope="row">{{purchase.id}}</th>
-        <td>{{purchase.pid}}</td>
-        <td>{{purchase.time_purchased}}</td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
-{% else %}
-<p><a href="{{ url_for('users.login') }}">Log in</a> to see your purchase history!</p>
-{% endif %}
+<div id="pagination-controls" class="container my-4">
+    <button id="prev-page" class="btn btn-secondary" onclick="changePage(-1)" disabled>Previous</button>
+    <span id="page-info">Page 1</span>
+    <button id="next-page" class="btn btn-secondary" onclick="changePage(1)">Next</button>
+</div>
+
+<script>
+    let currentPage = 1;
+    const perPage = 10;
+
+    async function fetchTopExpensiveProducts(page) {
+        try {
+            const response = await fetch(`/top_expensive?page=${page}&limit=${perPage}`);
+            const data = await response.json();
+            const products = data.products;
+
+            const tableBody = document.getElementById('product-table-body');
+            tableBody.innerHTML = '';  // Clear existing rows
+
+            products.forEach(product => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <th scope="row">${product.product_id}</th>
+                    <td>${product.name}</td>
+                    <td>${product.price}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            const pageInfo = document.getElementById('page-info');
+            pageInfo.textContent = `Page ${data.page} of ${data.pages}`;
+            document.getElementById('prev-page').disabled = data.page <= 1;
+            document.getElementById('next-page').disabled = data.page >= data.pages;
+
+            currentPage = page;
+        } catch (error) {
+            console.error("Error fetching products:", error);
+        }
+    }
+
+    function changePage(offset) {
+        const newPage = currentPage + offset;
+        fetchTopExpensiveProducts(newPage);
+    }
+
+    fetchTopExpensiveProducts(currentPage);
+</script>
 
 {% endblock %}

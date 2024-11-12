@@ -83,20 +83,22 @@ def logout():
 def view_account():
     id = int(request.cookies.get("id"))
     user = User.get(id)
-    order_history = User.get_product_history(id)
+    
+    # Get page number from request args
+    page = request.args.get("page", default=1, type=int)
+    per_page = 3  # You can adjust items per page as needed
+
+    # Retrieve paginated order history
+    order_history_data = User.get_product_history(id, page=page, per_page=per_page)
+    order_history = order_history_data["rows"]
+    total_pages = order_history_data["pages"]
 
     if user is None:
         logout_user()
         return redirect(url_for('users.login'))
 
-    if request.method == "GET":
-        return render_template('account.html', title="View Account", full_name=user.full_name, 
-                email=user.email, address=user.address, balance=user.balance, order_history=order_history)
-    else:
-        field_id = request.form.get("form_id")
-        field_value = request.form.get(field_id)
-        User.update(id, field_id, field_value)
-        user = User.get(id)
+    return render_template('account.html', title="View Account", 
+                           full_name=user.full_name, email=user.email, 
+                           address=user.address, balance=user.balance, 
+                           order_history=order_history, page=page, total_pages=total_pages)
 
-        return render_template('account.html', title="View Account", full_name=user.full_name, 
-                email=user.email, address=user.address, balance=user.balance, order_history=order_history)
