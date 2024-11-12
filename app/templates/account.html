@@ -80,12 +80,59 @@
     </form>
   </div>
 
-  <div class="history">
+  <div class="history" style="height: 5vh;">
     <h1>Purchase History</h1>
-    {% for purchase in order_history %} {% for line_item in purchase %}
-    <p>{{ line_item }}</p>
-    {% endfor %} {% endfor %}
+    <table class="table table-hover table-bordered container">
+      <thead class="thead-dark">
+        <tr>
+          <th scope="col">Product Name</th>
+          <th scope="col">Description</th>
+          <th scope="col">Category</th>
+          <th scope="col">Quantity</th>
+          <th scope="col">Price</th>
+          <th scope="col">Date Ordered</th>
+        </tr>
+      </thead>
+      <tbody id="orderHistoryTableBody">
+        {% for purchase in order_history %}
+        <tr>
+          <td>{{ purchase['name'] }}</td>
+          <td>{{ purchase['description'] }}</td>
+          <td>{{ purchase['category_name'] }}</td>
+          <td>{{ purchase['quantity'] }}</td>
+          <td>{{ purchase['price'] }}</td>
+          <td>{{ purchase['ordered_time'] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  
+    <!-- Pagination Controls -->
+    <div id="pagination-controls" class="container my-4">
+      <button id="prev-page" class="btn btn-secondary" onclick="cP(-1)" {% if page <= 1 %}disabled{% endif %}>Previous</button>
+      <span>Page {{ page }} of {{ total_pages }}</span>
+      <button id="next-page" class="btn btn-secondary" onclick="cP(1)" {% if page >= total_pages %}disabled{% endif %}>Next</button>
+    </div>
   </div>
+  
+  <script>
+    function cP(offset) {
+      const currentPage = parseInt("{{ page }}", 10);
+      const totalPages = parseInt("{{ total_pages }}", 10);
+      const newPage = currentPage + offset;
+  
+      if (newPage < 1 || newPage > totalPages) return;
+  
+      const url = new URL(window.location.href);
+      url.searchParams.set("page", newPage);
+      window.location.href = url.toString();
+    }
+  </script>
+
+  
+  
+  
+  
 
   <!-- Button to redirect to Most Recent Reviews -->
   <div class="recent-reviews">
@@ -99,15 +146,10 @@
 <hr />
 <h2 style="margin-left: 5%">Selling Inventory</h2>
 <br />
-<a href="/inventory" style="margin-left: 5%; width: 30%" class="btn btn-primary"
-  >Seller Inventory Lookup</a
->
+<a href="/inventory" style="margin-left: 5%; width: 30%" class="btn btn-primary">Seller Inventory Lookup</a>
 <br />
-<table
-  id="inventoryTable"
-  border="1"
-  style="width: 40%; margin-left: 5%; margin-top: 20px"
->
+
+<table id="inventoryTable" border="1" style="width: 90%; margin-left: 5%; margin-top: 20px">
   <thead>
     <tr>
       <th>Inventory ID</th>
@@ -123,52 +165,78 @@
   <tbody></tbody>
 </table>
 
+<div id="pagination-controls" class="container my-4" style="margin-left: 5%">
+  <button id="prev-page" class="btn btn-secondary" onclick="changePage(-1)" disabled>Previous</button>
+  <span id="page-info">Page 1</span>
+  <button id="next-page" class="btn btn-secondary" onclick="changePage(1)">Next</button>
+</div>
+
 <script>
+  let currentPage = 1;
+  const perPage = 10;
+
   function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(";").shift();
   }
-  async function fetchInventory(userId) {
+
+  async function fetchInventory(page) {
+    const userId = getCookie("id");
+    if (!userId) {
+      console.error("User ID cookie not found");
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/inventory?user_id=${userId}`);
-      if (!response.ok) throw new Error("Failed to fetch inventory");
+      const response = await fetch(`/api/inventory?user_id=${userId}&page=${page}&limit=${perPage}`);
+      const data = await response.json();
 
-      const inventory = await response.json();
-      const tableBody = document
-        .getElementById("inventoryTable")
-        .querySelector("tbody");
-      tableBody.innerHTML = "";
+      if (data.error) {
+        console.error(data.error);
+        return;
+      }
 
-      inventory.forEach((item) => {
+      const inventory = data.inventory;
+      const tableBody = document.getElementById("inventoryTable").querySelector("tbody");
+      tableBody.innerHTML = "";  // Clear existing rows
+
+      inventory.forEach(item => {
         const row = document.createElement("tr");
         row.innerHTML = `
-                    <td>${item.inventory_id}</td>
-                    <td>${item.seller_id}</td>
-                    <td>${item.product_id}</td>
-                    <td>${item.quantity}</td>
-                    <td>${item.product_name}</td>
-                    <td>${item.description}</td>
-                    <td><img src="${item.image_url}" alt="Product Image" width="50"></td>
-                    <td>${item.price}</td>
-                `;
+          <td>${item.inventory_id}</td>
+          <td>${item.seller_id}</td>
+          <td>${item.product_id}</td>
+          <td>${item.quantity}</td>
+          <td>${item.product_name}</td>
+          <td>${item.description}</td>
+          <td><img src="${item.image_url}" alt="Product Image" width="50"></td>
+          <td>${item.price}</td>
+        `;
         tableBody.appendChild(row);
       });
+
+      // Update pagination info
+      const pageInfo = document.getElementById("page-info");
+      pageInfo.textContent = `Page ${data.page} of ${data.pages}`;
+      document.getElementById("prev-page").disabled = data.page <= 1;
+      document.getElementById("next-page").disabled = data.page >= data.pages;
+
+      // Set the current page to the newly fetched page
+      currentPage = page;
     } catch (error) {
       console.error("Error loading inventory:", error);
     }
   }
-  window.onload = function () {
-    const userId = getCookie("id");
-    if (userId) {
-      fetchInventory(userId);
-    } else {
-      console.error("User ID cookie not found");
-    }
-  };
-  function redirectToRecentReviews() {
-    window.location.href = "/reviewsrecent";
+
+  function changePage(offset) {
+    const newPage = currentPage + offset;
+    fetchInventory(newPage);
   }
+
+  // Load the first page of inventory initially
+  fetchInventory(currentPage);
 </script>
+
 
 {% endblock %}

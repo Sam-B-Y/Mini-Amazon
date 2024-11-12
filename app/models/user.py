@@ -83,16 +83,30 @@ WHERE user_id = :user_id
         return None
     
     @staticmethod
-    def get_product_history(user_id):
+    def get_product_history(user_id, page=1, per_page=3):
+        offset = (page - 1) * per_page
         rows = app.db.execute('''
-SELECT name, description, category_name, ordered_time, image_url, quantity, price
-FROM OrderItems
-JOIN Orders ON Orders.order_id = OrderItems.order_id
-JOIN Products ON Products.product_id=OrderItems.product_id                              
-WHERE user_id = :user_id
-''',
-                              user_id=user_id)
-        return rows
+            SELECT name, description, category_name, ordered_time, image_url, quantity, price
+            FROM OrderItems
+            JOIN Orders ON Orders.order_id = OrderItems.order_id
+            JOIN Products ON Products.product_id = OrderItems.product_id                              
+            WHERE user_id = :user_id
+            LIMIT :per_page OFFSET :offset
+        ''', user_id=user_id, per_page=per_page, offset=offset)
+
+        total_items = app.db.execute('''
+            SELECT COUNT(*) FROM OrderItems
+            JOIN Orders ON Orders.order_id = OrderItems.order_id
+            WHERE user_id = :user_id
+        ''', user_id=user_id)[0][0]
+
+        return {
+            "rows": rows,
+            "total_items": total_items,
+            "page": page,
+            "pages": (total_items + per_page - 1) // per_page  # Total pages
+        }
+
 
     def is_seller(user_id):
         rows = app.db.execute('''
