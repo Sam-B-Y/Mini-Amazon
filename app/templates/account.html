@@ -36,11 +36,6 @@
             <button type="submit" class="submit"><a class="btn btn-secondary"><i class="fa fa-edit"></i></a></button>
         </form>
         
-        <br>
-        <br>
-        <br>
-        <a href="/inventory" class="btn btn-primary">Inventory Lookup</a>
-        
     </div>
     <div class="history">
         <h1>Purchase History</h1>
@@ -53,5 +48,71 @@
         {% endfor %}
     </div>
 </div>
+
+<hr>
+<h2 style="margin-left: 5%;">Selling Inventory</h2>
+<br>
+<a href="/inventory" style="margin-left: 5%; width: 30%;" class="btn btn-primary">Seller Inventory Lookup</a>
+<br>
+<table id="inventoryTable" border="1" style="width: 40%; margin-left: 5%; margin-top: 20px;">
+    <thead>
+        <tr>
+            <th>Inventory ID</th>
+            <th>Seller ID</th>
+            <th>Product ID</th>
+            <th>Quantity</th>
+            <th>Product Name</th>
+            <th>Description</th>
+            <th>Image</th>
+            <th>Price</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+
+<script>
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+    async function fetchInventory(userId) {
+        try {
+            const response = await fetch(`/api/inventory?user_id=${userId}`);
+            if (!response.ok) throw new Error("Failed to fetch inventory");
+
+            const inventory = await response.json();
+            const tableBody = document.getElementById("inventoryTable").querySelector("tbody");
+            tableBody.innerHTML = "";
+
+            inventory.forEach(item => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${item.inventory_id}</td>
+                    <td>${item.seller_id}</td>
+                    <td>${item.product_id}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.product_name}</td>
+                    <td>${item.description}</td>
+                    <td><img src="${item.image_url}" alt="Product Image" width="50"></td>
+                    <td>${item.price}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error("Error loading inventory:", error);
+        }
+    }
+    window.onload = function() {
+        const userId = getCookie("id");
+        if (userId) {
+            fetchInventory(userId);
+        } else {
+            console.error("User ID cookie not found");
+        }
+    };
+</script>
 
 {% endblock %}

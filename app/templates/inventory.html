@@ -1,37 +1,38 @@
-<!DOCTYPE html>
-<html>
-<body>
+{% extends "base.html" %}
 
-<h1>Seller Inventory</h1>
-<div>
+{% block content %}
+
+<br><br>
+
+<h1 class="container">Seller Inventory</h1>
+<div class="container mb-4">
     <label for="user_id">Enter your Seller ID:</label>
-    <input type="number" id="user_id" name="user_id" required>
-    <button onclick="fetchInventory()">Get Inventory</button>
+    <input type="number" id="user_id" name="user_id" required class="form-control w-25 d-inline">
+    <button onclick="fetchInventory()" class="btn btn-primary ml-2">Get Inventory</button>
 </div>
-<div id="error-message" class="error"></div>
+<div id="error-message" class="error text-danger container mb-4"></div>
 
-<h2>Inventory List</h2>
-<table id="inventory-table" style="display: none;">
-    <thead>
+<h2 class="container">Inventory List</h2>
+<table id="inventory-table" class="table table-hover table-bordered container" style="display: none;">
+    <thead class="thead-dark">
         <tr>
-            <th>Inventory ID</th>
-            <th>Seller ID</th>
-            <th>Product ID</th>
-            <th>Quantity</th>
-            <th>Product Name</th>
-            <th>Description</th>
-            <th>Image</th>
-            <th>Price</th>
+            <th scope="col">Inventory ID</th>
+            <th scope="col">Seller ID</th>
+            <th scope="col">Product ID</th>
+            <th scope="col">Quantity</th>
+            <th scope="col">Product Name</th>
+            <th scope="col">Description</th>
+            <th scope="col">Image</th>
+            <th scope="col">Price</th>
         </tr>
     </thead>
     <tbody></tbody>
 </table>
 
-<br>
-<br>
-<br>
-<a href="/" class="btn btn-secondary">Go to Homepage</a>
-
+<br><br><br>
+<div class="container">
+    <a href="/" class="btn btn-secondary">Go to Homepage</a>
+</div>
 
 <script>
     function fetchInventory() {
@@ -41,10 +42,12 @@
         const tbody = table.querySelector('tbody');
         errorDiv.textContent = '';
         tbody.innerHTML = '';
+        
         if (!userId) {
             errorDiv.textContent = 'Please enter a valid seller ID.';
             return;
         }
+        
         fetch(`/api/inventory?user_id=${userId}`)
             .then(response => response.json())
             .then(data => {
@@ -64,7 +67,6 @@
                             <td><img src="${item.image_url}" alt="Product Image" width="50"></td>
                             <td>${item.price}</td>
                         `;
-
                         tbody.appendChild(row);
                     });
                     table.style.display = 'table';
@@ -76,5 +78,5 @@
             });
     }
 </script>
-</body>
-</html>
+
+{% endblock %}
