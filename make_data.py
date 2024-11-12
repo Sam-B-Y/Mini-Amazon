@@ -37,7 +37,7 @@ kaggle_df["price"] = [float(fake.random_int(max=10000) + fake.random_int(max=99)
 kaggle_df["created_by"] = [sellers.sample(n=1).iloc[0]["user_id"] for i in range(len(kaggle_df))]
 kaggle_df["quantity"] = [np.random.randint(20, 100) for i in range(len(kaggle_df))]
 kaggle_df["inventory_id"] = [i + 1 for i in range(len(kaggle_df))]
-
+kaggle_df = kaggle_df.replace(',','', regex=True)
 # make categories table
 
 categories = kaggle_df["category_name"].drop_duplicates()
