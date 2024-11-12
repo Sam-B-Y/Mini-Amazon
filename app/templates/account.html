@@ -78,34 +78,13 @@
         <a class="btn btn-secondary"><i class="fa fa-edit"></i></a>
       </button>
     </form>
-
-    <br />
-    <br />
-    <br />
-    <a href="/inventory" class="btn btn-primary">Inventory Lookup</a>
   </div>
-
   <div class="history">
     <h1>Purchase History</h1>
     {% for purchase in order_history %} {% for line_item in purchase %}
     <p>{{ line_item }}</p>
     {% endfor %} {% endfor %}
   </div>
-
-  <!-- Button to redirect to Most Recent Reviews -->
-  <div class="recent-reviews">
-    <h1>Most Recent Reviews</h1>
-    <button class="btn btn-primary" onclick="redirectToRecentReviews()">
-      View Recent Reviews
-    </button>
-  </div>
 </div>
-
-<script>
-  // Redirect function for Most Recent Reviews Button
-  function redirectToRecentReviews() {
-    window.location.href = "/reviewsrecent";
-  }
-</script>
 
 {% endblock %}
