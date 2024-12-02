@@ -42,20 +42,28 @@
         const tbody = table.querySelector('tbody');
         errorDiv.textContent = '';
         tbody.innerHTML = '';
-        
+    
         if (!userId) {
             errorDiv.textContent = 'Please enter a valid seller ID.';
             return;
         }
-        
+    
         fetch(`/api/inventory?user_id=${userId}`)
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('Received data:', data);
                 if (data.error) {
                     errorDiv.textContent = data.error;
                     table.style.display = 'none';
+                } else if (!Array.isArray(data.inventory)) {
+                    errorDiv.textContent = 'Unexpected data format.';
+                    console.error('Expected an array, but received:', data.inventory);
+                    table.style.display = 'none';
                 } else {
-                    data.forEach(item => {
+                    data.inventory.forEach(item => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td>${item.inventory_id}</td>
@@ -73,10 +81,11 @@
                 }
             })
             .catch(error => {
-                console.error('Error fetching inventory:', error);
+                console.error('Fetch error:', error);
                 errorDiv.textContent = 'An error occurred while fetching inventory.';
             });
     }
-</script>
+    </script>
+    
 
 {% endblock %}
