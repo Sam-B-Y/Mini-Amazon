@@ -90,6 +90,7 @@
           <th scope="col">Quantity</th>
           <th scope="col">Price</th>
           <th scope="col">Date Ordered</th>
+          <th scope="col">Submit Review</th>
         </tr>
       </thead>
       <tbody id="orderHistoryTableBody">
@@ -101,6 +102,15 @@
           <td>{{ purchase['quantity'] }}</td>
           <td>{{ purchase['price'] }}</td>
           <td>{{ purchase['ordered_time'] }}</td>
+          <td>
+            <form id="reviewForm-{{ purchase['product_id'] }}" class="review-form">
+              <input type="hidden" name="product_id" value="{{ purchase['product_id'] }}">
+              <input type="hidden" name="seller_id" value="{{ purchase['seller_id'] }}">
+              <input type="number" name="rating" min="1" max="5" required placeholder="Rating (1-5)">
+              <textarea name="comment" placeholder="Your review" required></textarea>
+              <button type="button" class="btn btn-primary" onclick="submitReview(event, {{ purchase['product_id'] }})">Submit Review</button>
+            </form>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
@@ -124,14 +134,41 @@
       url.searchParams.set("page", newPage);
       window.location.href = url.toString();
     }
+
+    async function submitReview(event, productId) {
+      event.preventDefault();
+      const form = document.getElementById(`reviewForm-${productId}`);
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+
+      try {
+        const response = await fetch('/api/reviews/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+        
+        if (response.ok) {
+          alert('Review submitted successfully!'); // Notify success
+          window.location.href = '/reviewsrecent'; // Redirect to recent reviews page
+        } else {
+          alert(result.error || 'An error occurred while submitting the review.'); // Notify error
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('An unexpected error occurred.');
+      }
+    }
   </script>
 
   <!-- Button to redirect to Most Recent Reviews -->
   <div class="recent-reviews">
     <h1>Most Recent Reviews</h1>
-    <button class="btn btn-primary" onclick="redirectToRecentReviews()">
-      View Recent Reviews
-    </button>
+    <a href="/reviewsrecent" class="btn btn-primary">View Recent Reviews</a>
   </div>
 </div>
 <!-- Inventory Listing -->
@@ -141,7 +178,7 @@
     <tr>
       <th>Inventory ID</th>
       <th>Seller ID</th>
-      <th>Product ID</th>
+      <th>Product ID</thth>
       <th>Quantity</th>
       <th>Product Name</th>
       <th>Description</th>
@@ -159,7 +196,7 @@
 
   function getCookie(name) {
     const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
+    const parts = value.split(`; ${name}=`); 
     if (parts.length === 2) return parts.pop().split(";").shift();
   }
 
@@ -336,9 +373,5 @@ document.getElementById('addInventoryForm').addEventListener('submit', async fun
     }
 });
 </script>
-
-
-
-
 
 {% endblock %}
