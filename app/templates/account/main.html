@@ -1,0 +1,42 @@
+{% extends "base.html" %} {% block content %}
+
+<div class="container" style="text-align: center; margin-top: 50px">
+  <h2>My Account</h2>
+  <div
+    class="button-group"
+    style="
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+      margin-top: 30px;
+      justify-content: center;
+    "
+  >
+    <a
+      href="/edit_account"
+      class="btn btn-primary btn-lg"
+      style="width: 200px; padding: 25px"
+      ><i class="fa fa-edit"></i> Edit Account Info</a
+    >
+    <a
+      href="/purchase_history"
+      class="btn btn-primary btn-lg"
+      style="width: 200px; padding: 25px"
+      ><i class="fa fa-history"></i> Purchase History</a
+    >
+    <a
+      href="/reviewsrecent"
+      class="btn btn-primary btn-lg"
+      style="width: 200px; padding: 25px"
+      ><i class="fa fa-star"></i> My Reviews</a
+    >
+    <a
+      href="/seller_profile"
+      class="btn btn-primary btn-lg"
+      style="width: 200px; padding: 25px"
+      ><i class="fa fa-user"></i> My Seller Profile</a
+    >
+  </div>
+</div>
+
+{% endblock %}

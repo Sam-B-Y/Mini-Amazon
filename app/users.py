@@ -15,6 +15,11 @@ from .forms.inventory_form import InventoryForm
 from flask import Blueprint
 bp = Blueprint('users', __name__)
 
+class UserInfoForm(FlaskForm):
+    full_name = StringField('Full Name', validators=[DataRequired()])
+    address = StringField('Address', validators=[DataRequired()])
+    balance = StringField('Balance', validators=[DataRequired()])
+    submit = SubmitField('Update')
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -82,42 +87,107 @@ def logout():
     logout_user()
     return redirect(url_for('index.index'))
 
-@bp.route('/account', methods=['GET', 'POST'])
-def view_account():
+@bp.route('/edit_account', methods=['GET', 'POST'])
+def edit_account():
     id = int(request.cookies.get("id"))
     user = User.get(id)
-    form = InventoryForm()
+
+    if user is None:
+        logout_user()
+        return redirect(url_for('users.login'))
+    
+    form = UserInfoForm()
+    if form.validate_on_submit():
+        user.full_name = form.full_name.data
+        user.address = form.address.data
+        user.balance = form.balance.data
+        user.save()
+        flash('Your changes have been saved.')
+        
+        return redirect(url_for('users.edit_account'))
+    
+    elif request.method == 'GET':
+
+        return render_template('account/edit_account.html', title='Edit Account', full_name=user.full_name, address=user.address, balance=user.balance, email=user.email, form=form)
+
+@bp.route('/purchase_history', methods=['GET'])
+def purchase_history():
+    id = int(request.cookies.get("id"))
+    user = User.get(id)
 
     if user is None:
         logout_user()
         return redirect(url_for('users.login'))
     
     page = request.args.get("page", default=1, type=int)
-    per_page = 3 
+    per_page = 10
 
     order_history_data = User.get_product_history(id, page=page, per_page=per_page)
     order_history = order_history_data["rows"]
     total_pages = order_history_data["pages"]
 
-    if request.method == "GET":
-        return render_template('account.html', title="View Account", 
-                            full_name=user.full_name, email=user.email, 
-                            address=user.address, balance=user.balance, 
-                            order_history=order_history, page=page, 
-                            total_pages=total_pages, form=form)
+    return render_template('account/purchases.html', title="Purchase History", order_history=order_history, page=page, total_pages=total_pages)
 
-    else:
-        field_id = request.form.get("form_id")
-        field_value = request.form.get(field_id)
-        User.update(id, field_id, field_value)
-        user = User.get(id)
+@bp.route('/seller_profile', methods=['GET'])
+def seller_profile():
+    id = int(request.cookies.get("id"))
+    user = User.get(id)
 
-        return render_template('account.html', title="View Account", 
-                            full_name=user.full_name, email=user.email, 
-                            address=user.address, balance=user.balance, 
-                            order_history=order_history, page=page, 
-                            total_pages=total_pages, form=form)
-                            
+    if user is None:
+        logout_user()
+        return redirect(url_for('users.login'))
+
+    is_seller = User.is_seller(id)
+    if not is_seller:
+        return redirect(url_for('users.view_account'))
+    
+    stats = User.get_seller_stats(id)
+
+    return render_template('seller/main.html', title="Seller Profile", seller_stats=stats)
+
+@bp.route('/view_orders', methods=['GET'])
+def view_orders():
+    id = int(request.cookies.get("id"))
+    user = User.get(id)
+
+    if user is None:
+        logout_user()
+        return redirect(url_for('users.login'))
+    
+    is_seller = User.is_seller(id)
+    if not is_seller:
+        return redirect(url_for('users.view_account'))
+
+    return render_template('seller/orders.html', title="View Orders")
+
+@bp.route('/view_inventory', methods=['GET'])
+def view_inventory():
+    id = int(request.cookies.get("id"))
+    user = User.get(id)
+
+    if user is None:
+        logout_user()
+        return redirect(url_for('users.login'))
+    
+    is_seller = User.is_seller(id)
+    if not is_seller:
+        return redirect(url_for('users.view_account'))
+    
+
+    return render_template('seller/inventory.html', title="View Inventory")
+
+@bp.route('/account', methods=['GET'])
+def view_account():
+    id = int(request.cookies.get("id"))
+    user = User.get(id)
+
+    if user is None:
+        logout_user()
+        return redirect(url_for('users.login'))
+    
+    return render_template('account/main.html', title="View Account")
+
+                        
 @bp.route('/user/<hashed_email>')
 def view_user(hashed_email):
     users = User.get_all()

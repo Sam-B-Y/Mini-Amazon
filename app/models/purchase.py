@@ -34,7 +34,7 @@ ORDER BY ordered_time DESC
         return [Purchase(*row) for row in rows]
 
     @staticmethod
-    def get_orders_by_seller(seller_id: int, search_query: str = "") -> list[dict]:
+    def get_orders_by_seller(seller_id: int, search_query: str = "", status_filter: str = "") -> list[dict]:
         rows = app.db.execute('''
         SELECT 
             oi.order_id,
@@ -66,5 +66,5 @@ ORDER BY ordered_time DESC
                 "buyer_address": row[5],
                 "order_status": row[6],
             }
-            for row in rows
+            for row in rows if status_filter == "" or row[6] == status_filter
         ]
