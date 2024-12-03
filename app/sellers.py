@@ -12,3 +12,4 @@ def get_db_connection():
         password="your_password"
     )
     return conn
+

@@ -52,13 +52,16 @@ def add_inventory():
         if not user_id:
             return jsonify({"error": "User ID not found. Please log in."}), 400
 
-        # Get form data
-        category_name = request.form.get('category_name', type=str)
-        name = request.form.get('name', type=str)
-        description = request.form.get('description', type=str)
-        image_url = request.form.get('image_url', type=str)
-        price = request.form.get('price', type=float)
-        quantity = request.form.get('quantity', type=int)
+        # Get JSON data
+        data = request.get_json()
+
+        # Extract fields from JSON
+        category_name = data.get('category_name')
+        name = data.get('name')
+        description = data.get('description')
+        image_url = data.get('image_url')
+        price = data.get('price')
+        quantity = data.get('quantity')
 
         # Validate required fields
         if not category_name or not name or not description or not image_url or price is None or quantity is None:
@@ -78,6 +81,7 @@ def add_inventory():
     except Exception as e:
         print(f"Error adding to inventory: {e}")
         return jsonify({"error": "An error occurred while adding the item."}), 500
+
     
 @bp.route('/api/delete_product', methods=['DELETE'])
 def delete_product():
@@ -118,7 +122,6 @@ def update_quantity():
     except Exception as e:
         print(f"Error updating quantity: {e}")
         return jsonify({"error": "An unexpected error occurred"}), 500
-
 
 @bp.route('/inventory', methods=['GET'])
 def inventory_page():

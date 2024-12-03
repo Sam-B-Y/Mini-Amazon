@@ -36,4 +36,7 @@ def create_app():
     from .products import bp as products_bp
     app.register_blueprint(products_bp)
 
+    from .orders import bp as orders_bp
+    app.register_blueprint(orders_bp, url_prefix='/orders') 
+
     return app

@@ -32,3 +32,39 @@ ORDER BY ordered_time DESC
                               user_id=user_id,
                               since=since)
         return [Purchase(*row) for row in rows]
+
+    @staticmethod
+    def get_orders_by_seller(seller_id: int, search_query: str = "") -> list[dict]:
+        rows = app.db.execute('''
+        SELECT 
+            oi.order_id,
+            oi.quantity,
+            oi.unit_price,
+            o.ordered_time,
+            u.full_name AS buyer_name,
+            u.address AS buyer_address,
+            o.status AS order_status
+        FROM OrderItems oi
+        JOIN Orders o ON oi.order_id = o.order_id
+        JOIN Users u ON o.user_id = u.user_id
+        WHERE oi.seller_id = :seller_id
+        AND (
+            o.order_id::TEXT ILIKE :search_query OR
+            u.full_name ILIKE :search_query OR
+            u.address ILIKE :search_query
+        )
+        ORDER BY o.ordered_time DESC;
+        ''', seller_id=seller_id, search_query=f"%{search_query}%")
+
+        return [
+            {
+                "order_id": row[0],
+                "quantity": row[1],
+                "unit_price": row[2],
+                "ordered_time": row[3],
+                "buyer_name": row[4],
+                "buyer_address": row[5],
+                "order_status": row[6],
+            }
+            for row in rows
+        ]
