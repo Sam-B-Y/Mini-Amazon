@@ -44,12 +44,14 @@ def get_products():
         'pages': (len(products) + per_page - 1) // per_page
     })
 
-@bp.route('/products/<int:product_id>')
+@bp.route('/products/<int:product_id>', methods=['GET'])
 def get_product(product_id):
     product = Product.get(product_id)
     if not product:
         return jsonify({'error': 'Product not found'}), 404
-    return jsonify(product.to_dict())
+    
+    reviews = Product.get_reviews(product_id)  # Fetch reviews for the product
+    return render_template('product_detail.html', product=product, reviews=reviews)
 
 @bp.route('/products', methods=['POST'])
 def create_product():

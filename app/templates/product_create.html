@@ -54,7 +54,7 @@
           description: document.getElementById('description').value,
           price: parseFloat(document.getElementById('price').value),
           image_url: document.getElementById('image_url').value,
-          created_by: {{ current_user.id }}  // Assuming you have current_user from Flask-Login
+          created_by: '{{ current_user.id }}' // Assuming you have current_user from Flask-Login
       };
 
       try {

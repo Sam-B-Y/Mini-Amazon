@@ -19,7 +19,7 @@
     <div class="sellers-list">
       {% for seller in sellers %}
       <div class="seller-card">
-        <p>Seller: {{ seller.seller_name }}</p>
+        <p>Seller: <a href="{{ url_for('sellers.seller_detail', seller_id=seller.seller_id) }}">{{ seller.seller_name }}</a></p>
         <p>In Stock: {{ seller.quantity }}</p>
         <form class="add-to-cart-form" data-seller-id="{{ seller.seller_id }}">
           <input
@@ -44,9 +44,9 @@
         <div class="rating">
           Rating: {{ "★" * review.rating }}{{ "☆" * (5 - review.rating) }}
         </div>
-        <p class="review-text">{{ review.review_text }}</p>
+        <p class="review-text">{{ review.comment }}</p>
         <p class="reviewer">By: {{ review.reviewer_name }}</p>
-        <p class="review-date">{{ review.created_at.strftime('%Y-%m-%d') }}</p>
+        <p class="review-date">{{ review.added_at.strftime('%Y-%m-%d') }}</p>
       </div>
       {% endfor %}
     </div>
@@ -67,7 +67,7 @@
                       'Content-Type': 'application/json',
                   },
                   body: JSON.stringify({
-                      product_id: {{ product.product_id }},
+                      product_id: '{{ product.product_id }}',
                       seller_id: sellerId,
                       quantity: parseInt(quantity)
                   })
