@@ -43,7 +43,9 @@
             products.forEach(product => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <th scope="row">${product.product_id}</th>
+                    <th scope="row">
+            <a href="/products/${product.product_id}">${product.product_id}</a>
+                    </th>
                     <td>${product.name}</td>
                     <td>${product.price}</td>
                     <td>

@@ -67,6 +67,7 @@
           margin: 0;
         "
       >
+        <a href="{{ url_for('products.get_products') }}" class="btn btn-light" style="margin-left: 15px">Products</a>
         {% if current_user.is_authenticated %} Hello {{current_user.full_name}}!
 
         <a

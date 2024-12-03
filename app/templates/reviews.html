@@ -1,0 +1,42 @@
+{% extends "base.html" %} {% block content %}
+<div class="reviews-container">
+  <h1>Product Reviews</h1>
+  <div class="reviews-list">
+    {% for review in reviews %}
+    <div class="review-card">
+      <div class="rating">
+        Rating: {{ "★" * review.rating }}{{ "☆" * (5 - review.rating) }}
+      </div>
+      <p class="review-text">{{ review.comment }}</p>
+      <p class="reviewer">By: {{ review.reviewer_name }}</p>
+      <p class="review-date">{{ review.added_at.strftime('%Y-%m-%d') }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+  .reviews-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .reviews-list {
+    display: grid;
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .review-card {
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+  }
+
+  .rating {
+    color: #f1c40f;
+    font-size: 18px;
+  }
+</style>
+{% endblock %}

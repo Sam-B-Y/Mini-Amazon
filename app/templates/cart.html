@@ -3,6 +3,8 @@
 <br /><br />
 
 <h2>Your Cart</h2>
+
+{% if cart_items %} {% set ns = namespace(grand_total=0) %}
 <table class="table table-hover table-bordered container">
   <thead class="thead-dark">
     <tr>
@@ -10,30 +12,82 @@
       <th scope="col">Image</th>
       <th scope="col">Price per Item</th>
       <th scope="col">Quantity</th>
+      <th scope="col">Total Price</th>
       <th scope="col">Seller</th>
+      <th scope="col">Actions</th>
     </tr>
   </thead>
   <tbody>
-    {% for item in cart_items%}
+    {% for item in cart_items %} {% set total_price = item.price * item.quantity
+    %} {% set ns.grand_total = ns.grand_total + total_price %}
     <tr>
-      <th scope="row">{{item.name}}</th>
+      <th scope="row">{{ item.name }}</th>
       <td>
         <img
-          src="{{item.image_url}}"
+          src="{{ item.image_url }}"
           alt="Product Image"
           width="100"
           height="100"
         />
       </td>
-      <td>{{item.price}}</td>
-      <td>{{item.quantity}}</td>
+      <td>${{ "%.2f"|format(item.price) }}</td>
       <td>
-        <button class="btn btn-link" onclick="redirectToSellerPage('{{item.created_by}}')">
+        <form
+          method="POST"
+          action="{{ url_for('cart.update_item') }}"
+          class="form-inline"
+        >
+          <input
+            type="hidden"
+            name="cart_item_id"
+            value="{{ item.cart_item_id }}"
+          />
+          <input
+            type="number"
+            name="quantity"
+            value="{{ item.quantity }}"
+            min="1"
+            class="form-control mr-2"
+            style="width: 80px"
+            required
+          />
+          <button type="submit" class="btn btn-primary btn-sm">Update</button>
+        </form>
+      </td>
+      <td>${{ "%.2f"|format(total_price) }}</td>
+      <td>
+        <button
+          class="btn btn-link"
+          onclick="redirectToSellerPage('{{ item.created_by }}')"
+        >
           View Seller
         </button>
       </td>
+      <td>
+        <form method="POST" action="{{ url_for('cart.remove_item') }}">
+          <input
+            type="hidden"
+            name="cart_item_id"
+            value="{{ item.cart_item_id }}"
+          />
+          <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+        </form>
+      </td>
     </tr>
     {% endfor %}
+    <tr>
+      <td colspan="4" class="text-right"><strong>Grand Total:</strong></td>
+      <td colspan="3"><strong>${{ "%.2f"|format(ns.grand_total) }}</strong></td>
+    </tr>
   </tbody>
 </table>
-{% endblock %}
+
+{% else %}
+<div class="container">
+  <p>
+    Your cart is empty.
+    <a href="{{ url_for('products.list') }}">Browse products</a> to add items to
+    your cart.
+  </p>
+</div>
+{% endif %} {% endblock %}
