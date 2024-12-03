@@ -1,0 +1,163 @@
+{% extends "base.html" %} {% block content %}
+<div class="product-detail-container">
+  <div class="product-main">
+    <img
+      src="{{ product.image_url }}"
+      alt="{{ product.name }}"
+      class="product-image"
+    />
+    <div class="product-info">
+      <h1>{{ product.name }}</h1>
+      <p class="price">${{ "%.2f"|format(product.price) }}</p>
+      <p class="category">Category: {{ product.category_name }}</p>
+      <p class="description">{{ product.description }}</p>
+    </div>
+  </div>
+
+  <div class="sellers-section">
+    <h2>Available from Sellers</h2>
+    <div class="sellers-list">
+      {% for seller in sellers %}
+      <div class="seller-card">
+        <p>Seller: {{ seller.seller_name }}</p>
+        <p>In Stock: {{ seller.quantity }}</p>
+        <form class="add-to-cart-form" data-seller-id="{{ seller.seller_id }}">
+          <input
+            type="number"
+            name="quantity"
+            min="1"
+            max="{{ seller.quantity }}"
+            value="1"
+          />
+          <button type="submit" class="add-to-cart-btn">Add to Cart</button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="reviews-section">
+    <h2>Product Reviews</h2>
+    <div class="reviews-list">
+      {% for review in reviews %}
+      <div class="review-card">
+        <div class="rating">
+          Rating: {{ "★" * review.rating }}{{ "☆" * (5 - review.rating) }}
+        </div>
+        <p class="review-text">{{ review.review_text }}</p>
+        <p class="reviewer">By: {{ review.reviewer_name }}</p>
+        <p class="review-date">{{ review.created_at.strftime('%Y-%m-%d') }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.add-to-cart-form').forEach(form => {
+      form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const sellerId = form.dataset.sellerId;
+          const quantity = form.querySelector('input[name="quantity"]').value;
+
+          try {
+              const response = await fetch('/cart/add', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                      product_id: {{ product.product_id }},
+                      seller_id: sellerId,
+                      quantity: parseInt(quantity)
+                  })
+              });
+
+              if (response.ok) {
+                  alert('Added to cart successfully!');
+              } else {
+                  alert('Failed to add to cart. Please try again.');
+              }
+          } catch (error) {
+              console.error('Error:', error);
+              alert('An error occurred. Please try again.');
+          }
+      });
+  });
+</script>
+
+<style>
+  .product-detail-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .product-main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 40px;
+  }
+
+  .product-image {
+    width: 100%;
+    max-height: 500px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  .product-info {
+    padding: 20px;
+  }
+
+  .price {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2c3e50;
+  }
+
+  .sellers-section,
+  .reviews-section {
+    margin-top: 40px;
+  }
+
+  .sellers-list,
+  .reviews-list {
+    display: grid;
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .seller-card,
+  .review-card {
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+  }
+
+  .add-to-cart-form {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .add-to-cart-btn {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .add-to-cart-btn:hover {
+    background-color: #2980b9;
+  }
+
+  .rating {
+    color: #f1c40f;
+    font-size: 18px;
+  }
+</style>
+{% endblock %}

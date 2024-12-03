@@ -317,67 +317,143 @@
   }
 
   fetchInventory(currentPage);
+
+  function redirectToRecentReviews() {
+    window.location.href = "/reviewsrecent";
+  }
 </script>
 
-<form method="POST" action="{{ url_for('inventory.add_inventory') }}" class="form mt-4">
-    {{ form.hidden_tag() }}
-    
-    <div class="form-group">
-        {{ form.category_name.label }}
-        {{ form.category_name(class="form-control") }}
-        {% for error in form.category_name.errors %}
-            <span class="text-danger">{{ error }}</span>
-        {% endfor %}
-    </div>
-
-    <div class="form-group">
-        {{ form.name.label }}
-        {{ form.name(class="form-control") }}
-        {% for error in form.name.errors %}
-            <span class="text-danger">{{ error }}</span>
-        {% endfor %}
-    </div>
-
-    <div class="form-group">
-        {{ form.description.label }}
-        {{ form.description(class="form-control", rows=3) }}
-        {% for error in form.description.errors %}
-            <span class="text-danger">{{ error }}</span>
-        {% endfor %}
-    </div>
-
-    <div class="form-group">
-        {{ form.image_url.label }}
-        {{ form.image_url(class="form-control") }}
-        {% for error in form.image_url.errors %}
-            <span class="text-danger">{{ error }}</span>
-        {% endfor %}
-    </div>
-
-    <div class="form-group">
-        {{ form.price.label }}
-        {{ form.price(class="form-control") }}
-        {% for error in form.price.errors %}
-            <span class="text-danger">{{ error }}</span>
-        {% endfor %}
-    </div>
-
-    <div class="form-group">
-        {{ form.quantity.label }}
-        {{ form.quantity(class="form-control") }}
-        {% for error in form.quantity.errors %}
-            <span class="text-danger">{{ error }}</span>
-        {% endfor %}
-    </div>
-
-    {{ form.submit(class="btn btn-primary") }}
+<!--Add to Inventory Form-->
+<!-- Add Inventory Form -->
+<form id="addInventoryForm" style="width: 90%; margin-left: 5%; margin-top: 20px;">
+  <div class="form-group">
+    <label for="category_name">Category Name:</label>
+    <input type="text" id="category_name" name="category_name" class="form-control" required>
+  </div>
+  <div class="form-group">
+    <label for="name">Product Name:</label>
+    <input type="text" id="name" name="name" class="form-control" required>
+  </div>
+  <div class="form-group">
+    <label for="description">Description:</label>
+    <textarea id="description" name="description" class="form-control" rows="3" required></textarea>
+  </div>
+  <div class="form-group">
+    <label for="image_url">Image URL:</label>
+    <input type="url" id="image_url" name="image_url" class="form-control" required>
+  </div>
+  <div class="form-group">
+    <label for="price">Price:</label>
+    <input type="number" id="price" name="price" class="form-control" step="0.01" required>
+  </div>
+  <div class="form-group">
+    <label for="quantity">Quantity:</label>
+    <input type="number" id="quantity" name="quantity" class="form-control" required>
+  </div>
+  <button type="submit" class="btn btn-primary">Add to Inventory</button>
 </form>
 
 <script>
-function redirectToRecentReviews() {
-    window.location.href = '/reviewsrecent';
+function loadInventory() {
+    window.location.reload(); // Reload the entire page
 }
+document.getElementById('addInventoryForm').addEventListener('submit', async function (event) {
+    event.preventDefault(); // Prevent default form submission
+
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData.entries()); // Convert FormData to JSON
+
+    try {
+        const response = await fetch('/add_inventory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert('Item added successfully!');
+            loadInventory(); // Refresh inventory table
+        } else {
+            alert(result.error || 'An error occurred while adding the item.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An unexpected error occurred.');
+    }
+});
 </script>
+
+<br>
+<br>
+
+<h2>Seller Orders</h2>
+<div style="margin: 20px;">
+  <input 
+      type="text" 
+      id="searchInput" 
+      placeholder="Search orders by buyer name, order ID, or address" 
+      style="width: 300px; padding: 5px;"
+  />
+  <button onclick="loadOrders()" style="padding: 5px;">Search</button>
+</div>
+
+<table id="ordersTable" border="1" style="width: 90%; margin: 20px;">
+  <thead>
+    <tr>
+      <th>Order ID</th>
+      <th>Buyer Name</th>
+      <th>Buyer Address</th>
+      <th>Date Ordered</th>
+      <th>Quantity</th>
+      <th>Total Amount</th>
+      <th>Order Status</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+
+<script>
+async function loadOrders() {
+    try {
+        const searchQuery = document.getElementById('searchInput').value.trim();
+        const response = await fetch(`/orders/api/seller_orders?search=${encodeURIComponent(searchQuery)}`);
+        const data = await response.json();
+
+        if (data.error) {
+            console.error(data.error);
+            return;
+        }
+
+        const ordersTable = document.getElementById("ordersTable").querySelector("tbody");
+        ordersTable.innerHTML = ""; // Clear existing rows
+
+        data.orders.forEach(order => {
+            const totalAmount = (order.quantity * order.unit_price).toFixed(2);
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${order.order_id}</td>
+                <td>${order.buyer_name}</td>
+                <td>${order.buyer_address}</td>
+                <td>${new Date(order.ordered_time).toLocaleDateString()}</td>
+                <td>${order.quantity}</td>
+                <td>${totalAmount}</td>
+                <td>${order.order_status}</td>
+            `;
+            ordersTable.appendChild(row);
+        });
+    } catch (error) {
+        console.error("Error loading orders:", error);
+    }
+}
+
+// Load orders when page loads
+loadOrders();
+</script>
+
 
 
 
