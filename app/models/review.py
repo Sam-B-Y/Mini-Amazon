@@ -29,3 +29,13 @@ WHERE user_id = :user_id
 ORDER BY added_at DESC limit 5
 ''', user_id=user_id)
         return [Review(*row) for row in rows]
+
+    @staticmethod
+    def get_seller_reviews(seller_id):
+        rows = app.db.execute('''
+        SELECT *
+        FROM Reviews
+        WHERE seller_id = :seller_id
+        ORDER BY added_at DESC
+        ''', seller_id=seller_id)
+        return [Review(*row) for row in rows]

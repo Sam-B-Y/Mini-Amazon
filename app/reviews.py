@@ -26,3 +26,14 @@ def reviews_product():
 @bp.route('/reviewsrecent', methods = ['GET'])
 def reviews_page():
     return render_template('reviewsrecent.html')
+
+@bp.route('/api/reviews/seller/<int:seller_id>', methods=['GET'])
+def seller_reviews(seller_id):
+    reviews = Review.get_seller_reviews(seller_id)
+    return jsonify([{
+        'id': r.review_id,
+        'product_id': r.product_id,
+        'rating': r.rating,
+        'comment': r.comment,
+        'timestamp': r.added_at
+    } for r in reviews])

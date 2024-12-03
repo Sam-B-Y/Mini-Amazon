@@ -3,6 +3,7 @@ from flask import current_app as app
 
 from .models.user import User
 from .models.inventory import Inventory
+from .forms.inventory_form import InventoryForm
 
 bp = Blueprint('inventory', __name__)
 
@@ -45,40 +46,41 @@ def search():
     })
 
 
-@bp.route('/add_inventory', methods=['POST'])
+@bp.route('/add_inventory', methods=['GET', 'POST'])
 def add_inventory():
-    try:
-        user_id = request.cookies.get('id')  # Assuming the user ID is stored in cookies
-        if not user_id:
-            return jsonify({"error": "User ID not found. Please log in."}), 400
+    form = InventoryForm()
+    if form.validate_on_submit():
+        try:
+            user_id = request.cookies.get('id')
+            if not user_id:
+                flash("User ID not found. Please log in.", "error")
+                return redirect(url_for('users.login'))
 
-        # Get form data
-        category_name = request.form.get('category_name', type=str)
-        name = request.form.get('name', type=str)
-        description = request.form.get('description', type=str)
-        image_url = request.form.get('image_url', type=str)
-        price = request.form.get('price', type=float)
-        quantity = request.form.get('quantity', type=int)
+            if not Inventory.category_exists(form.category_name.data):
+                Inventory.add_category(form.category_name.data)
 
-        # Validate required fields
-        if not category_name or not name or not description or not image_url or price is None or quantity is None:
-            return jsonify({"error": "All fields are required."}), 400
+            result = Inventory.add(
+                user_id,
+                form.category_name.data,
+                form.name.data,
+                form.description.data,
+                form.image_url.data,
+                form.price.data,
+                form.quantity.data
+            )
 
-        # Check if the category exists, create it if it doesn't
-        if not Inventory.category_exists(category_name):
-            Inventory.add_category(category_name)
+            if result:
+                flash('Item added successfully!', 'success')
+                return redirect(url_for('users.view_account'))
+            else:
+                flash('Failed to add item to inventory.', 'error')
 
-        # Add the product and inventory
-        result = Inventory.add(user_id, category_name, name, description, image_url, price, quantity)
-        if result:
-            return jsonify({"success": "Item added successfully!"}), 200
-        else:
-            return jsonify({"error": "Failed to add item to inventory."}), 500
+        except Exception as e:
+            print(f"Error adding to inventory: {e}")
+            flash('An error occurred while adding the item.', 'error')
 
-    except Exception as e:
-        print(f"Error adding to inventory: {e}")
-        return jsonify({"error": "An error occurred while adding the item."}), 500
-    
+    return render_template('account.html', form=form)
+
 @bp.route('/api/delete_product', methods=['DELETE'])
 def delete_product():
     try:
