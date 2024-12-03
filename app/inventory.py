@@ -3,6 +3,7 @@ from flask import current_app as app
 
 from .models.user import User
 from .models.inventory import Inventory
+from .forms.inventory_form import InventoryForm
 
 bp = Blueprint('inventory', __name__)
 
@@ -45,7 +46,7 @@ def search():
     })
 
 
-@bp.route('/add_inventory', methods=['POST'])
+@bp.route('/add_inventory', methods=['GET', 'POST'])
 def add_inventory():
     try:
         user_id = request.cookies.get('id')  # Assuming the user ID is stored in cookies

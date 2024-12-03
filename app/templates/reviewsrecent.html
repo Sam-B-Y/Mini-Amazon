@@ -28,7 +28,9 @@
                         <div class="review">
                             <strong>Rating:</strong> ${review['rating:']}<br>
                             <strong>Comment:</strong> ${review['comment:']}<br>
-                            <span class="timestamp text-muted">Added at: ${review.timestamp}</span>
+                            <span class="timestamp text-muted">Added at: ${review.timestamp}</span><br>
+                            <button class="btn btn-warning btn-sm" onclick="editReview(${review.id}, '${review['rating:']}', '${review['comment:']}')">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteReview(${review.id})">Delete</button>
                         </div>
                     `;
                     reviewsContainer.appendChild(reviewElement);
@@ -39,6 +41,47 @@
         } catch (error) {
             console.error("Error fetching reviews:", error);
             reviewsContainer.innerHTML = "<p class='text-danger'>An error occurred while fetching reviews.</p>";
+        }
+    }
+
+    function editReview(reviewId, currentRating, currentComment) {
+        const newRating = prompt("Edit your rating (1-5):", currentRating);
+        const newComment = prompt("Edit your comment:", currentComment);
+        
+        if (newRating && newComment) {
+            fetch(`/api/reviews/edit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ review_id: reviewId, rating: newRating, comment: newComment }),
+            }).then(response => {
+                if (response.ok) {
+                    alert("Review updated successfully!");
+                    window.location.reload(); // Refresh the page to see changes
+                } else {
+                    alert("Failed to update review.");
+                }
+            });
+        }
+    }
+
+    function deleteReview(reviewId) {
+        if (confirm("Are you sure you want to delete this review?")) {
+            fetch(`/api/reviews/delete`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ review_id: reviewId }),
+            }).then(response => {
+                if (response.ok) {
+                    alert("Review deleted successfully!");
+                    window.location.reload(); // Refresh the page to see changes
+                } else {
+                    alert("Failed to delete review.");
+                }
+            });
         }
     }
 

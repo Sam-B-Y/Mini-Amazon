@@ -7,6 +7,18 @@
 <h1 class="container">Product Reviews</h1>
 <div id="reviews" class="container mt-4"></div>
 
+<!-- Review Submission Form -->
+<div class="container mt-4">
+    <h3>Submit Your Review</h3>
+    <form action="/submit_review" method="POST">
+        <input type="hidden" name="product_id" value="{{ product_id }}">
+        <input type="hidden" name="seller_id" value="{{ seller_id }}">
+        <input type="number" name="rating" min="1" max="5" required placeholder="Rating (1-5)">
+        <textarea name="comment" placeholder="Your review" required></textarea>
+        <button type="submit" class="btn btn-primary">Submit Review</button>
+    </form>
+</div>
+
 <script>
     async function fetchProductReviews() {
         const params = new URLSearchParams(window.location.search);
