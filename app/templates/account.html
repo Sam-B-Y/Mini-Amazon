@@ -78,6 +78,7 @@
     </form>
   </div>
 
+  <!-- Purchase History and Pagination -->
   <div class="history" style="height: 5vh;">
     <h1>Purchase History</h1>
     <table class="table table-hover table-bordered container">
@@ -113,7 +114,7 @@
           </td>
           <td>
             <button class="btn btn-link" onclick="redirectToSellerPage('{{ purchase.seller_id }}')">
-                View Seller
+              View Seller
             </button>
           </td>
         </tr>
@@ -159,7 +160,7 @@
         
         if (response.ok) {
           alert('Review submitted successfully!'); // Notify success
-          window.location.href = '/reviewsrecent'; // Redirect to recent reviews page
+          fetchRecentReviews(); // Refresh the recent reviews section
         } else {
           alert(result.error || 'An error occurred while submitting the review.'); // Notify error
         }
@@ -171,10 +172,11 @@
   </script>
 
   <!-- Button to redirect to Most Recent Reviews -->
-  <div class="recent-reviews" style="margin-top: 15%; margin-left: 5%;">
+  <div class="recent-reviews">
     <h1>Most Recent Reviews</h1>
-    <a href="/reviewsrecent" class="btn btn-primary">View Recent Reviews</a>
-
+    <button class="btn btn-primary" onclick="redirectToRecentReviews()">
+      View Recent Reviews
+    </button>
   </div>
 </div>
 <!-- Inventory Listing -->
@@ -318,69 +320,65 @@
 
   fetchInventory(currentPage);
 </script>
-
 <form method="POST" action="{{ url_for('inventory.add_inventory') }}" class="form mt-4">
-    {{ form.hidden_tag() }}
-    
-    <div class="form-group">
-        {{ form.category_name.label }}
-        {{ form.category_name(class="form-control") }}
-        {% for error in form.category_name.errors %}
-            <span class="text-danger">{{ error }}</span>
-        {% endfor %}
-    </div>
+  {{ form.hidden_tag() }}
 
-    <div class="form-group">
-        {{ form.name.label }}
-        {{ form.name(class="form-control") }}
-        {% for error in form.name.errors %}
-            <span class="text-danger">{{ error }}</span>
-        {% endfor %}
-    </div>
+  <div class="form-group">
+    {{ form.category_name.label }}
+    {{ form.category_name(class="form-control") }}
+    {% for error in form.category_name.errors %}
+    <span class="text-danger">{{ error }}</span>
+    {% endfor %}
+  </div>
 
-    <div class="form-group">
-        {{ form.description.label }}
-        {{ form.description(class="form-control", rows=3) }}
-        {% for error in form.description.errors %}
-            <span class="text-danger">{{ error }}</span>
-        {% endfor %}
-    </div>
+  <div class="form-group">
+    {{ form.name.label }}
+    {{ form.name(class="form-control") }}
+    {% for error in form.name.errors %}
+    <span class="text-danger">{{ error }}</span>
+    {% endfor %}
+  </div>
 
-    <div class="form-group">
-        {{ form.image_url.label }}
-        {{ form.image_url(class="form-control") }}
-        {% for error in form.image_url.errors %}
-            <span class="text-danger">{{ error }}</span>
-        {% endfor %}
-    </div>
+  <div class="form-group">
+    {{ form.description.label }}
+    {{ form.description(class="form-control", rows=3) }}
+    {% for error in form.description.errors %}
+    <span class="text-danger">{{ error }}</span>
+    {% endfor %}
+  </div>
 
-    <div class="form-group">
-        {{ form.price.label }}
-        {{ form.price(class="form-control") }}
-        {% for error in form.price.errors %}
-            <span class="text-danger">{{ error }}</span>
-        {% endfor %}
-    </div>
+  <div class="form-group">
+    {{ form.image_url.label }}
+    {{ form.image_url(class="form-control") }}
+    {% for error in form.image_url.errors %}
+    <span class="text-danger">{{ error }}</span>
+    {% endfor %}
+  </div>
 
-    <div class="form-group">
-        {{ form.quantity.label }}
-        {{ form.quantity(class="form-control") }}
-        {% for error in form.quantity.errors %}
-            <span class="text-danger">{{ error }}</span>
-        {% endfor %}
-    </div>
+  <div class="form-group">
+    {{ form.price.label }}
+    {{ form.price(class="form-control") }}
+    {% for error in form.price.errors %}
+    <span class="text-danger">{{ error }}</span>
+    {% endfor %}
+  </div>
 
-    {{ form.submit(class="btn btn-primary") }}
+  <div class="form-group">
+    {{ form.quantity.label }}
+    {{ form.quantity(class="form-control") }}
+    {% for error in form.quantity.errors %}
+    <span class="text-danger">{{ error }}</span>
+    {% endfor %}
+  </div>
+
+  {{ form.submit(class="btn btn-primary") }}
 </form>
 
 <script>
-function redirectToRecentReviews() {
+  function redirectToRecentReviews() {
     window.location.href = '/reviewsrecent';
-}
+  }
 </script>
-
-
-
 
 
 {% endblock %}
