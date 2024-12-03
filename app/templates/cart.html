@@ -10,6 +10,7 @@
       <th scope="col">Image</th>
       <th scope="col">Price per Item</th>
       <th scope="col">Quantity</th>
+      <th scope="col">Seller</th>
     </tr>
   </thead>
   <tbody>
@@ -26,6 +27,11 @@
       </td>
       <td>{{item.price}}</td>
       <td>{{item.quantity}}</td>
+      <td>
+        <button class="btn btn-link" onclick="redirectToSellerPage('{{item.created_by}}')">
+          View Seller
+        </button>
+      </td>
     </tr>
     {% endfor %}
   </tbody>

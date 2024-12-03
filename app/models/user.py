@@ -67,6 +67,15 @@ WHERE user_id = :user_id
                               user_id=user_id)
         return User(*(rows[0])) if rows else None
 
+    def get_email_from_id(user_id):
+        rows = app.db.execute("""
+SELECT email
+FROM Users
+WHERE user_id = :user_id
+""",
+                              user_id=user_id)
+        return rows[0][0] if rows else None
+
     @staticmethod
     def update(user_id, field, new_value):
         if field == "balance":
@@ -86,7 +95,7 @@ WHERE user_id = :user_id
     def get_product_history(user_id, page=1, per_page=3):
         offset = (page - 1) * per_page
         rows = app.db.execute('''
-            SELECT name, description, category_name, ordered_time, image_url, quantity, price
+            SELECT name, description, category_name, ordered_time, image_url, quantity, price, seller_id
             FROM OrderItems
             JOIN Orders ON Orders.order_id = OrderItems.order_id
             JOIN Products ON Products.product_id = OrderItems.product_id                              
@@ -115,3 +124,11 @@ WHERE user_id = :user_id
             WHERE user_id = :user_id AND is_seller = TRUE
         ''', user_id=user_id)
         return len(rows) == 1
+
+    @staticmethod
+    def get_all():
+        rows = app.db.execute('''
+SELECT user_id, email, full_name, address, balance
+FROM Users
+''')
+        return [User(*row) for row in rows]
