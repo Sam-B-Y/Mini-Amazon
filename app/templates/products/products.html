@@ -1,0 +1,134 @@
+{% extends "base.html" %} {% block content %}
+<div class="products-container">
+  <div class="search-filters">
+    <form id="search-form">
+      <input
+        type="text"
+        id="search"
+        name="q"
+        placeholder="Search products..."
+      />
+
+      <select name="category" id="category">
+        <option value="">All Categories</option>
+        {% for category in categories %}
+        <option value="{{ category.category_name }}">
+          {{ category.category_name }}
+        </option>
+        {% endfor %}
+      </select>
+
+      <select name="sort" id="sort">
+        <option value="">Sort by...</option>
+        <option value="asc">Price: Low to High</option>
+        <option value="desc">Price: High to Low</option>
+      </select>
+
+      <button type="submit">Search</button>
+    </form>
+  </div>
+
+  <div id="products-grid"></div>
+  <div id="pagination"></div>
+</div>
+
+<script>
+  let currentPage = 1;
+
+  function loadProducts(page = 1) {
+    const searchParams = new URLSearchParams({
+      q: document.getElementById("search").value,
+      category: document.getElementById("category").value,
+      sort: document.getElementById("sort").value,
+      page: page,
+    });
+
+    fetch(`/products?${searchParams}`)
+      .then((response) => response.json())
+      .then((data) => {
+        const grid = document.getElementById("products-grid");
+        grid.innerHTML = "";
+
+        data.products.forEach((product) => {
+          grid.innerHTML += `
+                    <div class="product-card">
+                        <img src="${product.image_url}" alt="${product.name}">
+                        <h3>${product.name}</h3>
+                        <p class="price">$${product.price}</p>
+                        <p class="description">${product.description}</p>
+                        <a href="/products/${product.product_id}" class="view-details">View Details</a>
+                    </div>
+                `;
+        });
+
+        // Update pagination
+        updatePagination(data.page, data.pages);
+      });
+  }
+
+  function updatePagination(currentPage, totalPages) {
+    const pagination = document.getElementById("pagination");
+    pagination.innerHTML = "";
+
+    for (let i = 1; i <= totalPages; i++) {
+      const button = document.createElement("button");
+      button.textContent = i;
+      button.classList.toggle("active", i === currentPage);
+      button.onclick = () => loadProducts(i);
+      pagination.appendChild(button);
+    }
+  }
+
+  document.getElementById("search-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    currentPage = 1;
+    loadProducts(1);
+  });
+
+  // Initial load
+  loadProducts(1);
+</script>
+
+<style>
+  .products-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .search-filters {
+    margin-bottom: 20px;
+  }
+
+  #products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+  }
+
+  .product-card {
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+  }
+
+  .product-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  .pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .pagination button.active {
+    background-color: #007bff;
+    color: white;
+  }
+</style>
+{% endblock %}

@@ -95,7 +95,7 @@ WHERE user_id = :user_id
     def get_product_history(user_id, page=1, per_page=10):
         offset = (page - 1) * per_page
         rows = app.db.execute('''
-            SELECT name, description, category_name, ordered_time, image_url,  quantity, price, seller_id, Orders.order_id 
+            SELECT name, description, category_name, ordered_time, image_url,  quantity, price, seller_id, Orders.order_id, Products.product_id
             FROM OrderItems
             JOIN Orders ON Orders.order_id = OrderItems.order_id
             JOIN Products ON Products.product_id = OrderItems.product_id                              
@@ -151,3 +151,4 @@ FROM Users
             WHERE i.seller_id = :user_id
         ''', user_id=user_id)
         return rows[0] if rows else None
+    

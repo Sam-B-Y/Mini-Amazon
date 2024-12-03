@@ -39,6 +39,37 @@ def update_item():
 
     return redirect(url_for('cart.cart'))
 
+@bp.route('/cart/add', methods=['POST'])
+@login_required
+def add_item():
+    product_id = request.form.get('product_id')
+    quantity = request.form.get('quantity')
+    seller_id = request.form.get('seller_id')
+
+    print(product_id, quantity, seller_id)
+
+    if not product_id or not quantity:
+        flash('Invalid request. Please try again.', 'danger')
+        return redirect(url_for('cart.cart'))
+
+    try:
+        product_id = int(product_id)
+        quantity = int(quantity)
+        if quantity < 1:
+            flash('Quantity must be at least 1.', 'warning')
+            return redirect(url_for('cart.cart'))
+    except ValueError:
+        flash('Invalid quantity value.', 'danger')
+        return redirect(url_for('cart.cart'))
+
+    success = Cart.add_item(current_user.id, product_id, seller_id, quantity)
+    if success:
+        flash('Item added to cart.', 'success')
+    else:
+        flash('Failed to add item. Please try again.', 'danger')
+
+    return redirect(url_for('cart.cart'))
+
 @bp.route('/cart/remove', methods=['POST'])
 @login_required
 def remove_item():

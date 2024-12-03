@@ -1,79 +1,88 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {% block content %}
 
-{% block content %}
-
-<br><br>
+<br /><br />
 
 <h2 class="container">Top Expensive Products</h2>
 <div id="products-container" class="container">
-    <table class='table table-hover table-bordered'>
-      <thead class="thead-dark">
-        <tr>
-          <th scope="col">Product ID</th>
-          <th scope="col">Product Name</th>
-          <th scope="col">Price</th>
-          <th scope="col">Seller</th>
-        </tr>
-      </thead>
-      <tbody id="product-table-body">
-        <!-- Product rows will be populated by JavaScript -->
-      </tbody>
-    </table>
+  <table class="table table-hover table-bordered">
+    <thead class="thead-dark">
+      <tr>
+        <th scope="col">Product ID</th>
+        <th scope="col">Product Name</th>
+        <th scope="col">Price</th>
+        <th scope="col">Seller</th>
+      </tr>
+    </thead>
+    <tbody id="product-table-body">
+      <!-- Product rows will be populated by JavaScript -->
+    </tbody>
+  </table>
 </div>
 
 <div id="pagination-controls" class="container my-4">
-    <button id="prev-page" class="btn btn-secondary" onclick="changePage(-1)" disabled>Previous</button>
-    <span id="page-info">Page 1</span>
-    <button id="next-page" class="btn btn-secondary" onclick="changePage(1)">Next</button>
+  <button
+    id="prev-page"
+    class="btn btn-secondary"
+    onclick="changePage(-1)"
+    disabled
+  >
+    Previous
+  </button>
+  <span id="page-info">Page 1</span>
+  <button id="next-page" class="btn btn-secondary" onclick="changePage(1)">
+    Next
+  </button>
 </div>
 
 <script>
-    let currentPage = 1;
-    const perPage = 10;
+  let currentPage = 1;
+  const perPage = 10;
 
-    async function fetchTopExpensiveProducts(page) {
-        try {
-            const response = await fetch(`/top_expensive?page=${page}&limit=${perPage}`);
-            const data = await response.json();
-            const products = data.products;
+  async function fetchTopExpensiveProducts(page) {
+    try {
+      const response = await fetch(
+        `/top_expensive?page=${page}&limit=${perPage}`
+      );
+      const data = await response.json();
+      const products = data.products;
 
-            const tableBody = document.getElementById('product-table-body');
-            tableBody.innerHTML = '';  // Clear existing rows
+      const tableBody = document.getElementById("product-table-body");
+      tableBody.innerHTML = ""; // Clear existing rows
 
-            products.forEach(product => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
+      products.forEach((product) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
                     <th scope="row">
             <a href="/products/${product.product_id}">${product.product_id}</a>
                     </th>
                     <td>${product.name}</td>
                     <td>${product.price}</td>
                     <td>
-                        <button class="btn btn-link" onclick="redirectToSellerPage('${product.created_by}')">
+                        <a class="btn btn-link" href="seller/${product.created_by}">
                             View Seller
-                        </button>
+                        </a>
                     </td>
                 `;
-                tableBody.appendChild(row);
-            });
+        tableBody.appendChild(row);
+      });
 
-            const pageInfo = document.getElementById('page-info');
-            pageInfo.textContent = `Page ${data.page} of ${data.pages}`;
-            document.getElementById('prev-page').disabled = data.page <= 1;
-            document.getElementById('next-page').disabled = data.page >= data.pages;
+      const pageInfo = document.getElementById("page-info");
+      pageInfo.textContent = `Page ${data.page} of ${data.pages}`;
+      document.getElementById("prev-page").disabled = data.page <= 1;
+      document.getElementById("next-page").disabled = data.page >= data.pages;
 
-            currentPage = page;
-        } catch (error) {
-            console.error("Error fetching products:", error);
-        }
+      currentPage = page;
+    } catch (error) {
+      console.error("Error fetching products:", error);
     }
+  }
 
-    function changePage(offset) {
-        const newPage = currentPage + offset;
-        fetchTopExpensiveProducts(newPage);
-    }
+  function changePage(offset) {
+    const newPage = currentPage + offset;
+    fetchTopExpensiveProducts(newPage);
+  }
 
-    fetchTopExpensiveProducts(currentPage);
+  fetchTopExpensiveProducts(currentPage);
 </script>
 
 {% endblock %}

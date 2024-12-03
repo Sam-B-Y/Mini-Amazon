@@ -11,7 +11,7 @@ class Inventory:
     def get(seller_id):
         rows = app.db.execute('''
             SELECT i.inventory_id, i.seller_id, i.product_id, i.quantity,
-                p.name AS product_name, p.description, p.image_url, p.price
+                p.name AS product_name, p.description, p.image_url, p.price, p.category_name
             FROM Inventory i
             JOIN Products p ON i.product_id = p.product_id
             WHERE i.seller_id = :seller_id;
@@ -25,7 +25,8 @@ class Inventory:
             product_name=row[4],
             description=row[5],
             image_url=row[6],
-            price=row[7]
+            price=row[7],
+            category_name=row[8]
         ) for row in rows] if rows else []
 
     @staticmethod
@@ -89,9 +90,16 @@ class Inventory:
         except Exception as e:
             print(f"Error adding category: {e}")
 
-
-    
-
+    @staticmethod
+    def get_stock(product_id):
+        rows = app.db.execute('''
+            SELECT i.seller_id, i.quantity, u.full_name
+            FROM Inventory i
+            JOIN Users u ON i.seller_id = u.user_id
+            WHERE i.product_id = :product_id 
+        ''', product_id=product_id)
+        row = rows[0]
+        return dict(seller_id=row[0], quantity=row[1], seller_name=row[2]) if rows else None
     # @staticmethod
     # def add_to_inventory(seller_id, product_id, quantity):
     #     try:

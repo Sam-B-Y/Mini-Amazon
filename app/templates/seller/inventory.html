@@ -2,9 +2,7 @@
 
 <div class="container my-5">
   <h3>Inventory</h3>
-  <div class="row" id="inventoryContainer">
-    <!-- Inventory items will be dynamically inserted here -->
-  </div>
+  <div class="row" id="inventoryContainer"></div>
 </div>
 
 <script>
@@ -25,7 +23,7 @@
       }
 
       const inventoryContainer = document.getElementById("inventoryContainer");
-      inventoryContainer.innerHTML = ""; // Clear existing content
+      inventoryContainer.innerHTML = "";
 
       data.inventory.forEach((item) => {
         const card = document.createElement("div");

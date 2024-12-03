@@ -137,3 +137,42 @@ h1 {
 .form-control:disabled {
   background-color: #dadde0 !important;
 }
+
+.star-rating {
+  font-size: 1.5rem;
+  display: flex;
+}
+
+.fa-star {
+  position: relative;
+  margin-right: 5px;
+}
+
+.fa-star.filled {
+  color: #ffc107;
+}
+
+.centered-stars {
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.fa-star.checked {
+  color: #ffc107;
+}
+
+.fa-star.empty {
+  color: #e0e0e0;
+}
+
+.fa-star.fractional {
+  background: linear-gradient(
+    to right,
+    #ffc107 var(--fraction-width),
+    #e0e0e0 var(--fraction-width)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

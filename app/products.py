@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for
 from .models.product import Product, Category
+from .models.inventory import Inventory
 
 bp = Blueprint('products', __name__)
 
@@ -50,8 +51,9 @@ def get_product(product_id):
     if not product:
         return jsonify({'error': 'Product not found'}), 404
     
-    reviews = Product.get_reviews(product_id)  # Fetch reviews for the product
-    return render_template('product_detail.html', product=product, reviews=reviews)
+    reviews = Product.get_reviews(product_id)
+    inventory = Inventory.get_stock(product_id)
+    return render_template('/products/product_detail.html', product=product, reviews=reviews, inventory=inventory)
 
 @bp.route('/products', methods=['POST'])
 def create_product():
@@ -71,6 +73,7 @@ def create_product():
 @bp.route('/products/<int:product_id>', methods=['PUT'])
 def update_product(product_id):
     data = request.get_json()
+
     product = Product.update(
         product_id=product_id,
         category_name=data['category_name'],
@@ -79,6 +82,7 @@ def update_product(product_id):
         image_url=data['image_url'],
         price=float(data['price'])
     )
+
     if product:
         return jsonify(product.to_dict())
     return jsonify({'error': 'Failed to update product'}), 400
@@ -96,6 +100,6 @@ def edit_product_form(product_id):
         return redirect(url_for('products.get_products'))
     
     categories = Category.get_all()
-    return render_template('product_edit.html', 
+    return render_template('/products/product_edit.html', 
                          product=product,
                          categories=categories)

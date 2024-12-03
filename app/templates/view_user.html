@@ -1,66 +1,123 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {% block content %}
 
-{% block content %}
+<div class="container mt-5 sellerinfo">
+  <div class="text-light">
+    <header class="mb-4">
+      <h1>Seller Page of {{ full_name }}</h1>
+    </header>
 
-<div class="container mt-5">
-    <div class="text-light">
-        <div class="card-header">
-            <h2>User Information</h2>
+    <div class="seller-info mb-4">
+      <div class="row mb-2">
+        <div class="col-md-3 font-weight-bold">Email:</div>
+        <div class="col-md-9">{{ email }}</div>
+      </div>
+      <div class="row align-items-center">
+        <div class="col-md-3 font-weight-bold">Rating:</div>
+        <div class="col-md-9">
+          <div class="star-rating d-flex align-items-center">
+            {% set average_rating = reviews | map(attribute='rating') | sum /
+            reviews | length if reviews else 0 %} {% for i in range(1, 6) %} {%
+            if average_rating >= i %}
+            <i class="fa fa-star filled"></i>
+            {% elif average_rating > i - 1 %}
+            <i
+              class="fa fa-star filled fractional"
+              style="--fraction-width: {{ (average_rating - (i - 1)) * 100 }}%;"
+            ></i>
+            {% else %}
+            <i class="fa fa-star empty"></i>
+            {% endif %} {% endfor %}
+            <span class="ml-2">({{ reviews|length if reviews else 0 }})</span>
+          </div>
         </div>
-        <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-3">
-                    <strong>Full Name:</strong>
-                </div>
-                <div class="col-md-9">
-                    {{ full_name }}
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-3">
-                    <strong>Email:</strong>
-                </div>
-                <div class="col-md-9">
-                    {{ email }}
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
 
-    <div class="card text-light mt-4" style="background-color: #000;">
-        <div class="card-header">
-            <h2>Seller Reviews</h2>
-        </div>
+    <section class="reviews-section">
+      <h2 class="mb-3" style="color: #fff">Reviews</h2>
+      {% if reviews %} {% for review in reviews %}
+      <div class="card mb-3">
         <div class="card-body">
-            <div id="reviews-container" style="background-color: #000;"></div>
+          <div class="d-flex align-items-center mb-2">
+            <div class="star-rating centered-stars">
+              {% for i in range(1, 6) %} {% if review.rating >= i %}
+              <i class="fa fa-star filled"></i>
+              {% elif review.rating > i - 1 %}
+              <i
+                class="fa fa-star filled fractional"
+                style="--fraction-width: {{ (review.rating - (i - 1)) * 100 }}%;"
+              ></i>
+              {% else %}
+              <i class="fa fa-star empty"></i>
+              {% endif %} {% endfor %}
+            </div>
+          </div>
+          <p class="mb-1">{{ review.comment }}</p>
+          <small class="text-muted"
+            >Added at: {{ review.added_at }} by {{ review.full_name }}</small
+          >
         </div>
-    </div>
+      </div>
+      {% endfor %} {% else %}
+      <p class="text-muted">No reviews yet.</p>
+      {% endif %}
+    </section>
+  </div>
 </div>
 
-<script>
-async function fetchSellerReviews() {
-    const reviewsContainer = document.getElementById('reviews-container');
-    const sellerId = '{{ seller_id }}';
-    const response = await fetch(`/api/reviews/seller/${sellerId}`);
-    const reviews = await response.json();
+<style>
+  .star-rating {
+    display: flex;
+  }
 
-    if (reviews.length === 0) {
-        reviewsContainer.innerHTML = '<p class="text-muted">No reviews yet.</p>';
-        return;
-    }
+  .star-rating .fa-star {
+    font-size: 1.5rem;
+    color: #f5c518;
+    margin-right: 0.25rem;
+  }
 
-    reviewsContainer.innerHTML = reviews.map(review => `
-        <div class="review-container border border-secondary rounded p-3 mb-3">
-            <div class="review">
-                <strong>Rating:</strong> ${review.rating}<br>
-                <strong>Comment:</strong> ${review.comment}<br>
-                <span class="text-muted">Added at: ${review.timestamp}</span>
-            </div>
-        </div>
-    `).join('');
-}
+  .star-rating .fa-star.empty {
+    color: #ccc;
+  }
 
-window.onload = fetchSellerReviews;
-</script>
+  .fractional {
+    position: relative;
+    overflow: hidden;
+  }
 
-{% endblock %} 
+  .fractional:before {
+    content: "\f005";
+    font-family: FontAwesome;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--fraction-width, 50%);
+    color: #f5c518;
+    overflow: hidden;
+  }
+
+  .card {
+    border: none;
+    background: #1c1c1e;
+    color: #fff;
+    width: 100%;
+    text-align: center;
+  }
+
+  .card .card-body {
+    padding: 1rem;
+  }
+
+  .reviews-section {
+    margin-top: 2rem;
+  }
+
+  .text-light,
+  .reviews-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+</style>
+
+{% endblock %}

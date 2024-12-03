@@ -1,0 +1,33 @@
+{% extends "base.html" %} {% block content %}
+<h1>Top Expensive Products</h1>
+<form id="top-expensive-form">
+  <label for="k">Number of products:</label>
+  <input type="number" id="k" name="k" min="1" value="10" />
+  <button type="submit">Get Products</button>
+</form>
+<div id="products-list"></div>
+
+<script>
+  document
+    .getElementById("top-expensive-form")
+    .addEventListener("submit", function (e) {
+      e.preventDefault();
+      const k = document.getElementById("k").value;
+      fetch(`/top_expensive?k=${k}`)
+        .then((response) => response.json())
+        .then((products) => {
+          const productsList = document.getElementById("products-list");
+          productsList.innerHTML = "";
+          products.forEach((product) => {
+            productsList.innerHTML += `
+          <div>
+            <h3>${product.name}</h3>
+            <p>Price: $${product.price}</p>
+            <p>${product.description}</p>
+          </div>
+        `;
+          });
+        });
+    });
+</script>
+{% endblock %}

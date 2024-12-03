@@ -56,12 +56,9 @@
       </td>
       <td>${{ "%.2f"|format(total_price) }}</td>
       <td>
-        <button
-          class="btn btn-link"
-          onclick="redirectToSellerPage('{{ item.created_by }}')"
-        >
+        <a class="btn btn-link" href="/seller/{{ item.created_by }}">
           View Seller
-        </button>
+        </a>
       </td>
       <td>
         <form method="POST" action="{{ url_for('cart.remove_item') }}">

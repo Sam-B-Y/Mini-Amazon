@@ -28,7 +28,7 @@
           </div>
           <div class="col-md-8">
             <h5>{{ purchase.name }}</h5>
-            <p class="text-muted">{{ purchase.description }}</p>
+            <p class="text-muted">{{ purchase.description|truncate(255) }}</p>
             <p>Category: {{ purchase.category_name }}</p>
             <p>Quantity: {{ purchase.quantity }}</p>
           </div>
@@ -36,7 +36,7 @@
             <a href="/seller/{{ purchase.seller_id }}" class="btn btn-link"
               >View Seller</a
             >
-            <a href="/product/{{ purchase.product_id }}" class="btn btn-link"
+            <a href="/products/{{ purchase.product_id }}" class="btn btn-link"
               >View Product</a
             >
           </div>

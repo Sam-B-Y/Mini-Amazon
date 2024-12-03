@@ -46,12 +46,25 @@ class Cart:
     def add_item(user_id, product_id, seller_id, quantity):
         """
         Add a new item to the cart for the user.
+        If the item already exists, add to its quantity.
         """
         try:
-            app.db.execute("""
-            INSERT INTO CartItems(user_id, product_id, seller_id, quantity)
-            VALUES (:user_id, :product_id, :seller_id, :quantity)
-            """, user_id=user_id, product_id=product_id, seller_id=seller_id, quantity=quantity)
+            row = app.db.execute("""
+                SELECT quantity FROM CartItems 
+                WHERE user_id = :user_id AND product_id = :product_id
+            """, user_id=user_id, product_id=product_id)
+            if row:
+                new_quantity = row.quantity + quantity
+                app.db.execute("""
+                    UPDATE CartItems
+                    SET quantity = :quantity
+                    WHERE user_id = :user_id AND product_id = :product_id
+                """, quantity=new_quantity, user_id=user_id, product_id=product_id)
+            else:
+                app.db.execute("""
+                    INSERT INTO CartItems(user_id, product_id, seller_id, quantity)
+                    VALUES (:user_id, :product_id, :seller_id, :quantity)
+                """, user_id=user_id, product_id=product_id, seller_id=seller_id, quantity=quantity)
             return True
         except Exception as e:
             print(f"Error adding item to cart: {e}")

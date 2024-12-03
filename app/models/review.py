@@ -33,12 +33,13 @@ ORDER BY added_at DESC limit 5
     @staticmethod
     def get_seller_reviews(seller_id):
         rows = app.db.execute('''
-        SELECT *
+        SELECT reviews.*, users.full_name
         FROM Reviews
+        JOIN users ON reviews.user_id = users.user_id
         WHERE seller_id = :seller_id
         ORDER BY added_at DESC
         ''', seller_id=seller_id)
-        return [Review(*row) for row in rows]
+        return rows
     
     def submit_review(user_id, product_id, seller_id, rating, comment):
         existing_review = app.db.execute('''
@@ -69,3 +70,12 @@ WHERE review_id = :review_id
 DELETE FROM reviews
 WHERE review_id = :review_id
 ''', review_id=review_id)
+
+    @staticmethod
+    def get_my_reviews(user_id):
+        rows = app.db.execute('''
+SELECT *
+FROM reviews
+WHERE user_id = :user_id
+''', user_id=user_id)
+        return [Review(*row) for row in rows]
