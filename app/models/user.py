@@ -92,14 +92,15 @@ WHERE user_id = :user_id
         return None
     
     @staticmethod
-    def get_product_history(user_id, page=1, per_page=3):
+    def get_product_history(user_id, page=1, per_page=10):
         offset = (page - 1) * per_page
         rows = app.db.execute('''
-            SELECT name, description, category_name, ordered_time, image_url, quantity, price, seller_id
+            SELECT name, description, category_name, ordered_time, image_url,  quantity, price, seller_id, Orders.order_id 
             FROM OrderItems
             JOIN Orders ON Orders.order_id = OrderItems.order_id
             JOIN Products ON Products.product_id = OrderItems.product_id                              
             WHERE user_id = :user_id
+            ORDER BY ordered_time DESC
             LIMIT :per_page OFFSET :offset
         ''', user_id=user_id, per_page=per_page, offset=offset)
 
@@ -113,7 +114,7 @@ WHERE user_id = :user_id
             "rows": rows,
             "total_items": total_items,
             "page": page,
-            "pages": (total_items + per_page - 1) // per_page  # Total pages
+            "pages": (total_items + per_page - 1) // per_page
         }
 
 
@@ -132,3 +133,21 @@ SELECT user_id, email, full_name, address, balance
 FROM Users
 ''')
         return [User(*row) for row in rows]
+    
+
+    @staticmethod
+    def get_seller_stats(user_id):
+        rows = app.db.execute('''
+            SELECT 
+                SUM(p.price * oi.quantity) AS total_sales, 
+                COUNT(DISTINCT o.order_id) AS total_orders,
+                AVG(r.rating) AS average_rating,
+                COUNT(DISTINCT i.product_id) AS products_listed
+            FROM OrderItems oi
+            JOIN inventory i ON i.product_id = oi.product_id
+            JOIN Products p ON p.product_id = oi.product_id
+            JOIN Orders o ON o.order_id = oi.order_id
+            LEFT JOIN Reviews r ON r.product_id = i.product_id
+            WHERE i.seller_id = :user_id
+        ''', user_id=user_id)
+        return rows[0] if rows else None

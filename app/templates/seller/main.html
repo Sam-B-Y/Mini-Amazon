@@ -1,0 +1,255 @@
+{% extends "base.html" %} {% block content %}
+
+<div
+  class="modal fade"
+  id="addItemModal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="addItemModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addItemForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addItemModalLabel">Add New Item</h5>
+          <button
+            type="button"
+            class="close"
+            data-dismiss="modal"
+            aria-label="Close"
+          >
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="category_name">Category Name:</label>
+            <input
+              type="text"
+              id="category_name"
+              name="category_name"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="name">Product Name:</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="description">Description:</label>
+            <textarea
+              id="description"
+              name="description"
+              class="form-control"
+              rows="3"
+              required
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label for="image_url">Image URL:</label>
+            <input
+              type="url"
+              id="image_url"
+              name="image_url"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="price">Price:</label>
+            <input
+              type="number"
+              id="price"
+              name="price"
+              class="form-control"
+              step="0.01"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="quantity">Quantity:</label>
+            <input
+              type="number"
+              id="quantity"
+              name="quantity"
+              class="form-control"
+              required
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">
+            Close
+          </button>
+          <button type="submit" class="btn btn-primary">Add Item</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="container" style="text-align: center; margin-top: 50px">
+  <h2>Seller Information</h2>
+  <div class="row" style="margin-top: 50px">
+    <div class="col-md-3">
+      <div class="card text-dark bg-white mb-3">
+        <div class="card-header">Total Sales</div>
+        <div class="card-body">
+          <h5 class="card-title">${{ seller_stats.total_sales }}</h5>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-dark bg-white mb-3">
+        <div class="card-header">Total Orders</div>
+        <div class="card-body">
+          <h5 class="card-title">{{ seller_stats.total_orders }}</h5>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-dark bg-white mb-3">
+        <div class="card-header">Average Rating</div>
+        <div class="card-body">
+          <h5 class="card-title">
+            <div class="star-rating">
+              {% for i in range(1, 6) %} {% if seller_stats.average_rating >= i
+              %}
+              <i class="fa fa-star filled"></i>
+              {% elif seller_stats.average_rating > i - 1 %}
+              <i
+                class="fa fa-star filled fractional"
+                style="--fraction-width: {{ (seller_stats.average_rating - (i - 1)) * 100 }}%;"
+              ></i>
+              {% else %}
+              <i class="fa fa-star empty"></i>
+              {% endif %} {% endfor %}
+            </div>
+          </h5>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-dark bg-white mb-3">
+        <div class="card-header">Products Listed</div>
+        <div class="card-body">
+          <h5 class="card-title">{{ seller_stats.products_listed }}</h5>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div
+    class="button-group"
+    style="
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+      margin-top: 30px;
+      justify-content: center;
+    "
+  >
+    <a
+      href="/view_inventory"
+      class="btn btn-primary btn-lg"
+      style="width: 200px; padding: 25px"
+      ><i class="fa fa-box"></i> View Inventory</a
+    >
+    <button
+      type="button"
+      class="btn btn-primary btn-lg"
+      style="width: 200px; padding: 25px"
+      data-toggle="modal"
+      data-target="#addItemModal"
+    >
+      <i class="fa fa-plus"></i> Create new listing
+    </button>
+    <a
+      href="/view_orders"
+      class="btn btn-primary btn-lg"
+      style="width: 200px; padding: 25px"
+      ><i class="fa fa-shopping-cart"></i> View Orders</a
+    >
+  </div>
+</div>
+
+<style>
+  .star-rating {
+    font-size: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .fa-star {
+    position: relative;
+    margin-right: 5px;
+  }
+
+  .fa-star.filled {
+    color: #ffc107;
+  }
+
+  .fa-star.empty {
+    color: #e0e0e0;
+  }
+
+  .fa-star.fractional {
+    background: linear-gradient(
+      to right,
+      #ffc107 var(--fraction-width),
+      #e0e0e0 var(--fraction-width)
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+</style>
+
+<script>
+
+  document
+    .getElementById("addItemForm")
+    .addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      const formData = new FormData(event.target);
+      const data = Object.fromEntries(formData.entries());
+
+      try {
+        const response = await fetch("/add_inventory", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          alert("Item added successfully!");
+          $("#addItemModal").modal("hide");
+          fetchInventory(currentPage);
+        } else {
+          alert(result.error || "An error occurred while adding the item.");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("An unexpected error occurred.");
+      }
+    });
+</script>
+
+{% endblock %}
+
+
+
+</div>

@@ -12,8 +12,13 @@ def seller_orders():
 
         seller_id = current_user.id
         search_query = request.args.get('search', "")
+        status_filter = request.args.get('status', "")
 
-        orders = Purchase.get_orders_by_seller(seller_id, search_query)
+
+        if status_filter == "All":
+            orders = Purchase.get_orders_by_seller(seller_id, search_query)
+        else:
+            orders = Purchase.get_orders_by_seller(seller_id, search_query, status_filter)
 
         return jsonify({"orders": orders}), 200
 
