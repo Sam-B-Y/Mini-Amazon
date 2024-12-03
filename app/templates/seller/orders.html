@@ -4,20 +4,32 @@
   <h2 class="mb-4 text-center">Seller Orders</h2>
 
   <div class="mb-4 d-flex justify-content-between align-items-center">
-    <label for="orderStatusFilter" class="form-label me-2">
-      <strong>Filter by Status:</strong>
-    </label>
-    <select
-      id="orderStatusFilter"
-      class="form-select w-auto"
-      onchange="loadOrders()"
-    >
-      <option value="All">All</option>
-      <option value="Pending">Pending</option>
-      <option value="Shipped">Shipped</option>
-      <option value="Complete">Complete</option>
-      <option value="Cancelled">Cancelled</option>
-    </select>
+    <div class="d-flex align-items-center">
+      <label for="orderStatusFilter" class="form-label me-2">
+        <strong>Filter by Status:</strong>
+      </label>
+      <select
+        id="orderStatusFilter"
+        class="form-select w-auto"
+        onchange="loadOrders()"
+      >
+        <option value="All">All</option>
+        <option value="Pending">Pending</option>
+        <option value="Shipped">Shipped</option>
+        <option value="Complete">Complete</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
+    </div>
+
+    <div class="input-group" style="width: 50%;">
+      <input
+        type="text"
+        id="orderSearchInput"
+        class="form-control"
+        placeholder="Search orders by buyer name, address, or order ID"
+      />
+      <button class="btn btn-primary" onclick="loadOrders()">Search</button>
+    </div>
   </div>
 
   <div id="ordersContainer" class="row g-4"></div>
@@ -27,17 +39,21 @@
   async function loadOrders() {
     try {
       const statusFilter = document.getElementById("orderStatusFilter").value;
+      const searchQuery = document.getElementById("orderSearchInput").value.trim();
       const ordersContainer = document.getElementById("ordersContainer");
 
       ordersContainer.innerHTML = "";
 
+      // Construct API URL with search and status filters
       const response = await fetch(
-        `/orders/api/seller_orders?status=${statusFilter}`
+        `/orders/api/seller_orders?status=${encodeURIComponent(statusFilter)}&search=${encodeURIComponent(searchQuery)}`
       );
       const data = await response.json();
 
       if (data.error) {
         console.error(data.error);
+        ordersContainer.innerHTML =
+          '<p class="text-danger text-center">Failed to load orders.</p>';
         return;
       }
 
@@ -53,24 +69,24 @@
         const card = document.createElement("div");
         card.className = "col-lg-4 col-md-6 col-sm-12";
         card.innerHTML = `
-        <div class="card shadow-sm border-0">
-          <div class="card-header d-flex justify-content-between align-items-center bg-light">
-            <span class="fw-bold">Order ID: ${order.order_id}</span>
-            <span class="badge ${badgeClass}">${order.order_status}</span>
+          <div class="card shadow-sm border-0">
+            <div class="card-header d-flex justify-content-between align-items-center bg-light">
+              <span class="fw-bold">Order ID: ${order.order_id}</span>
+              <span class="badge ${badgeClass}">${order.order_status}</span>
+            </div>
+            <div class="card-body">
+              <p><strong>Buyer:</strong> ${order.buyer_name}</p>
+              <p><strong>Address:</strong> ${order.buyer_address}</p>
+              <p><strong>Date:</strong> ${new Date(
+                order.ordered_time
+              ).toLocaleDateString()}</p>
+              <p><strong>Quantity:</strong> ${order.quantity}</p>
+              <p><strong>Total:</strong> $${(
+                order.quantity * order.unit_price
+              ).toFixed(2)}</p>
+            </div>
           </div>
-          <div class="card-body">
-            <p><strong>Buyer:</strong> ${order.buyer_name}</p>
-            <p><strong>Address:</strong> ${order.buyer_address}</p>
-            <p><strong>Date:</strong> ${new Date(
-              order.ordered_time
-            ).toLocaleDateString()}</p>
-            <p><strong>Quantity:</strong> ${order.quantity}</p>
-            <p><strong>Total:</strong> $${(
-              order.quantity * order.unit_price
-            ).toFixed(2)}</p>
-          </div>
-        </div>
-      `;
+        `;
         ordersContainer.appendChild(card);
       });
     } catch (error) {
@@ -93,6 +109,7 @@
     }
   }
 
+  // Load orders when the page loads
   loadOrders();
 </script>
 
@@ -117,7 +134,8 @@
     font-size: 0.85rem;
   }
 
-  #orderStatusFilter {
+  #orderStatusFilter,
+  #orderSearchInput {
     border-radius: 0.5rem;
   }
 </style>
