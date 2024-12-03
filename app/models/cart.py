@@ -34,7 +34,7 @@ class Cart:
         JOIN Products p ON c.product_id = p.product_id
         WHERE c.user_id = :user_id
         ORDER BY c.added_at ASC
-""", user_id=user_id)
+        """, user_id=user_id)
         # If no items found, return an empty list
         if not rows:
             return []
@@ -49,9 +49,9 @@ class Cart:
         """
         try:
             app.db.execute("""
-INSERT INTO CartItems(user_id, product_id, seller_id, quantity)
-VALUES (:user_id, :product_id, :seller_id, :quantity)
-""", user_id=user_id, product_id=product_id, seller_id=seller_id, quantity=quantity)
+            INSERT INTO CartItems(user_id, product_id, seller_id, quantity)
+            VALUES (:user_id, :product_id, :seller_id, :quantity)
+            """, user_id=user_id, product_id=product_id, seller_id=seller_id, quantity=quantity)
             return True
         except Exception as e:
             print(f"Error adding item to cart: {e}")
@@ -63,11 +63,19 @@ VALUES (:user_id, :product_id, :seller_id, :quantity)
         Update the quantity of a cart item.
         """
         try:
+            # Check if the cart item exists
+            row = app.db.execute("""
+            SELECT user_id FROM CartItems WHERE cart_item_id = :cart_item_id
+            """, cart_item_id=cart_item_id)
+            if not row:
+                print(f"Cart item {cart_item_id} does not exist.")
+                return False
+
             app.db.execute("""
-UPDATE CartItems
-SET quantity = :quantity
-WHERE cart_item_id = :cart_item_id
-""", cart_item_id=cart_item_id, quantity=quantity)
+            UPDATE CartItems
+            SET quantity = :quantity
+            WHERE cart_item_id = :cart_item_id
+            """, cart_item_id=cart_item_id, quantity=quantity)
             return True
         except Exception as e:
             print(f"Error updating item quantity: {e}")
@@ -79,10 +87,18 @@ WHERE cart_item_id = :cart_item_id
         Remove an item from the cart.
         """
         try:
+            # Check if the cart item exists
+            row = app.db.execute("""
+            SELECT user_id FROM CartItems WHERE cart_item_id = :cart_item_id
+            """, cart_item_id=cart_item_id)
+            if not row:
+                print(f"Cart item {cart_item_id} does not exist.")
+                return False
+
             app.db.execute("""
-DELETE FROM CartItems
-WHERE cart_item_id = :cart_item_id
-""", cart_item_id=cart_item_id)
+            DELETE FROM CartItems
+            WHERE cart_item_id = :cart_item_id
+            """, cart_item_id=cart_item_id)
             return True
         except Exception as e:
             print(f"Error removing item from cart: {e}")
