@@ -22,6 +22,11 @@ section {
   width: 50%;
 }
 
+.modal,
+.card {
+  color: #000;
+}
+
 body {
   font-family: "Source Sans Pro", sans-serif;
   color: #fff;
@@ -81,17 +86,17 @@ h1 {
 }
 
 .container-account {
-    display: flex;
-    padding-left: 3vw;
-    height: 35vw;
+  display: flex;
+  padding-left: 3vw;
+  height: 35vw;
 }
 
 .info {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    border-right: 2px solid #fff;
-    margin-right: 1vw;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  border-right: 2px solid #fff;
+  margin-right: 1vw;
 }
 
 .form {
@@ -101,19 +106,19 @@ h1 {
 }
 
 .label {
-    flex: 2;
+  flex: 2;
 }
 
 .field {
-    flex: 7;
+  flex: 7;
 }
 
 .submit {
-    flex: 1;
-    padding: 0; /* Space for the icon */
-    border: 0;
-    background-color: #000;
-    border-color: #000;
+  flex: 1;
+  padding: 0; /* Space for the icon */
+  border: 0;
+  background-color: #000;
+  border-color: #000;
 }
 .submit:focus {
   border-color: transparent; /* Remove border color on focus */
