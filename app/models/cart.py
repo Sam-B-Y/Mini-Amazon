@@ -1,7 +1,7 @@
 from flask import current_app as app
 
 class Cart:
-    def __init__(self, cart_item_id, user_id, product_id, seller_id, quantity, added_at, image_url, name, price):
+    def __init__(self, cart_item_id, user_id, product_id, seller_id, quantity, added_at, image_url, name, price, created_by):
         self.cart_item_id = cart_item_id
         self.user_id = user_id
         self.product_id = product_id
@@ -11,6 +11,7 @@ class Cart:
         self.image_url = image_url
         self.name = name
         self.price = price
+        self.created_by = created_by
 
     @staticmethod
     def get_by_user(user_id):
@@ -27,7 +28,8 @@ class Cart:
             c.added_at, 
             p.image_url, 
             p.name, 
-            p.price
+            p.price,
+            p.created_by
         FROM CartItems c
         JOIN Products p ON c.product_id = p.product_id
         WHERE c.user_id = :user_id

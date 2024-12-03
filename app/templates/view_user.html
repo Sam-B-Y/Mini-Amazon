@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <div class="text-light">
+        <div class="card-header">
+            <h2>User Information</h2>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <strong>Full Name:</strong>
+                </div>
+                <div class="col-md-9">
+                    {{ full_name }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>Email:</strong>
+                </div>
+                <div class="col-md-9">
+                    {{ email }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card text-light mt-4" style="background-color: #000;">
+        <div class="card-header">
+            <h2>Seller Reviews</h2>
+        </div>
+        <div class="card-body">
+            <div id="reviews-container" style="background-color: #000;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function fetchSellerReviews() {
+    const reviewsContainer = document.getElementById('reviews-container');
+    const sellerId = '{{ seller_id }}';
+    const response = await fetch(`/api/reviews/seller/${sellerId}`);
+    const reviews = await response.json();
+
+    if (reviews.length === 0) {
+        reviewsContainer.innerHTML = '<p class="text-muted">No reviews yet.</p>';
+        return;
+    }
+
+    reviewsContainer.innerHTML = reviews.map(review => `
+        <div class="review-container border border-secondary rounded p-3 mb-3">
+            <div class="review">
+                <strong>Rating:</strong> ${review.rating}<br>
+                <strong>Comment:</strong> ${review.comment}<br>
+                <span class="text-muted">Added at: ${review.timestamp}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+window.onload = fetchSellerReviews;
+</script>
+
+{% endblock %} 

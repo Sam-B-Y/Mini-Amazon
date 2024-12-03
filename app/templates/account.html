@@ -78,7 +78,6 @@
     </form>
   </div>
 
-  <!-- Purchase History and Pagination -->
   <div class="history" style="height: 5vh;">
     <h1>Purchase History</h1>
     <table class="table table-hover table-bordered container">
@@ -91,6 +90,7 @@
           <th scope="col">Price</th>
           <th scope="col">Date Ordered</th>
           <th scope="col">Submit Review</th>
+          <th scope="col">Seller</th>
         </tr>
       </thead>
       <tbody id="orderHistoryTableBody">
@@ -108,8 +108,13 @@
               <input type="hidden" name="seller_id" value="{{ purchase['seller_id'] }}">
               <input type="number" name="rating" min="1" max="5" required placeholder="Rating (1-5)">
               <textarea name="comment" placeholder="Your review" required></textarea>
-              <button type="button" class="btn btn-primary" onclick="submitReview(event, {{ purchase['product_id'] }})">Submit Review</button>
+              <button type="button" class="btn btn-primary" onclick="submitReview(event, purchase['product_id'])">Submit Review</button>
             </form>
+          </td>
+          <td>
+            <button class="btn btn-link" onclick="redirectToSellerPage('{{ purchase.seller_id }}')">
+                View Seller
+            </button>
           </td>
         </tr>
         {% endfor %}
@@ -166,9 +171,10 @@
   </script>
 
   <!-- Button to redirect to Most Recent Reviews -->
-  <div class="recent-reviews">
+  <div class="recent-reviews" style="margin-top: 15%; margin-left: 5%;">
     <h1>Most Recent Reviews</h1>
     <a href="/reviewsrecent" class="btn btn-primary">View Recent Reviews</a>
+
   </div>
 </div>
 <!-- Inventory Listing -->
@@ -218,7 +224,7 @@
 
       const inventory = data.inventory;
       const tableBody = document.getElementById("inventoryTable").querySelector("tbody");
-      tableBody.innerHTML = ""; // Clear existing rows
+      tableBody.innerHTML = ""; 
 
       inventory.forEach(item => {
         const row = document.createElement("tr");
@@ -272,7 +278,7 @@
 
       if (response.ok) {
         alert("Quantity updated successfully!");
-        fetchInventory(currentPage); // Refresh inventory table
+        fetchInventory(currentPage);
       } else {
         alert(result.error || "Failed to update quantity.");
       }
@@ -300,7 +306,7 @@
 
       if (response.ok) {
         alert("Product deleted successfully!");
-        fetchInventory(currentPage); // Refresh inventory table
+        fetchInventory(currentPage); 
       } else {
         alert(result.error || "Failed to delete product.");
       }
@@ -310,68 +316,71 @@
     }
   }
 
-  // Load inventory on page load
   fetchInventory(currentPage);
 </script>
 
-<!--Add to Inventory Form-->
-<form id="addInventoryForm" style="width: 90%; margin-left: 5%; margin-top: 20px;">
-  <div class="form-group">
-    <label for="category_name">Category Name:</label>
-    <input type="text" id="category_name" name="category_name" class="form-control" required>
-  </div>
-  <div class="form-group">
-    <label for="name">Product Name:</label>
-    <input type="text" id="name" name="name" class="form-control" required>
-  </div>
-  <div class="form-group">
-    <label for="description">Description:</label>
-    <textarea id="description" name="description" class="form-control" rows="3" required></textarea>
-  </div>
-  <div class="form-group">
-    <label for="image_url">Image URL:</label>
-    <input type="url" id="image_url" name="image_url" class="form-control" required>
-  </div>
-  <div class="form-group">
-    <label for="price">Price:</label>
-    <input type="number" id="price" name="price" class="form-control" step="0.01" required>
-  </div>
-  <div class="form-group">
-    <label for="quantity">Quantity:</label>
-    <input type="number" id="quantity" name="quantity" class="form-control" required>
-  </div>
-  <button type="submit" class="btn btn-primary">Add to Inventory</button>
+<form method="POST" action="{{ url_for('inventory.add_inventory') }}" class="form mt-4">
+    {{ form.hidden_tag() }}
+    
+    <div class="form-group">
+        {{ form.category_name.label }}
+        {{ form.category_name(class="form-control") }}
+        {% for error in form.category_name.errors %}
+            <span class="text-danger">{{ error }}</span>
+        {% endfor %}
+    </div>
+
+    <div class="form-group">
+        {{ form.name.label }}
+        {{ form.name(class="form-control") }}
+        {% for error in form.name.errors %}
+            <span class="text-danger">{{ error }}</span>
+        {% endfor %}
+    </div>
+
+    <div class="form-group">
+        {{ form.description.label }}
+        {{ form.description(class="form-control", rows=3) }}
+        {% for error in form.description.errors %}
+            <span class="text-danger">{{ error }}</span>
+        {% endfor %}
+    </div>
+
+    <div class="form-group">
+        {{ form.image_url.label }}
+        {{ form.image_url(class="form-control") }}
+        {% for error in form.image_url.errors %}
+            <span class="text-danger">{{ error }}</span>
+        {% endfor %}
+    </div>
+
+    <div class="form-group">
+        {{ form.price.label }}
+        {{ form.price(class="form-control") }}
+        {% for error in form.price.errors %}
+            <span class="text-danger">{{ error }}</span>
+        {% endfor %}
+    </div>
+
+    <div class="form-group">
+        {{ form.quantity.label }}
+        {{ form.quantity(class="form-control") }}
+        {% for error in form.quantity.errors %}
+            <span class="text-danger">{{ error }}</span>
+        {% endfor %}
+    </div>
+
+    {{ form.submit(class="btn btn-primary") }}
 </form>
 
 <script>
-document.getElementById('addInventoryForm').addEventListener('submit', async function (event) {
-    event.preventDefault(); // Prevent the default form submission
-
-    const formData = new FormData(event.target);
-    const data = Object.fromEntries(formData.entries()); // Convert FormData to JSON
-
-    try {
-        const response = await fetch('/add_inventory', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-        });
-
-        const result = await response.json();
-        
-        if (response.ok) {
-            alert('Item added successfully!'); // Notify success
-            window.location.reload(); // Refresh the page
-        } else {
-            alert(result.error || 'An error occurred while adding the item.'); // Notify error
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('An unexpected error occurred.');
-    }
-});
+function redirectToRecentReviews() {
+    window.location.href = '/reviewsrecent';
+}
 </script>
+
+
+
+
 
 {% endblock %}

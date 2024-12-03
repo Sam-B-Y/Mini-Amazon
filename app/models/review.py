@@ -31,6 +31,15 @@ ORDER BY added_at DESC limit 5
         return [Review(*row) for row in rows]
 
     @staticmethod
+    def get_seller_reviews(seller_id):
+        rows = app.db.execute('''
+        SELECT *
+        FROM Reviews
+        WHERE seller_id = :seller_id
+        ORDER BY added_at DESC
+        ''', seller_id=seller_id)
+        return [Review(*row) for row in rows]
+    
     def submit_review(user_id, product_id, seller_id, rating, comment):
         existing_review = app.db.execute('''
 SELECT *

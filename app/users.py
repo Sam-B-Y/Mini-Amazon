@@ -5,9 +5,12 @@ from flask_login import login_user, logout_user, current_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
+from hashlib import sha256
+from flask import abort
 
 from .models.user import User
 from .models.review import Review
+from .forms.inventory_form import InventoryForm
 
 from flask import Blueprint
 bp = Blueprint('users', __name__)
@@ -83,22 +86,61 @@ def logout():
 def view_account():
     id = int(request.cookies.get("id"))
     user = User.get(id)
-    
-    # Get page number from request args
-    page = request.args.get("page", default=1, type=int)
-    per_page = 3  # You can adjust items per page as needed
-
-    # Retrieve paginated order history
-    order_history_data = User.get_product_history(id, page=page, per_page=per_page)
-    order_history = order_history_data["rows"]
-    total_pages = order_history_data["pages"]
+    form = InventoryForm()
 
     if user is None:
         logout_user()
         return redirect(url_for('users.login'))
+    
+    page = request.args.get("page", default=1, type=int)
+    per_page = 3 
 
-    return render_template('account.html', title="View Account", 
-                           full_name=user.full_name, email=user.email, 
-                           address=user.address, balance=user.balance, 
-                           order_history=order_history, page=page, total_pages=total_pages)
+    order_history_data = User.get_product_history(id, page=page, per_page=per_page)
+    order_history = order_history_data["rows"]
+    total_pages = order_history_data["pages"]
+
+    if request.method == "GET":
+        return render_template('account.html', title="View Account", 
+                            full_name=user.full_name, email=user.email, 
+                            address=user.address, balance=user.balance, 
+                            order_history=order_history, page=page, 
+                            total_pages=total_pages, form=form)
+
+    else:
+        field_id = request.form.get("form_id")
+        field_value = request.form.get(field_id)
+        User.update(id, field_id, field_value)
+        user = User.get(id)
+
+        return render_template('account.html', title="View Account", 
+                            full_name=user.full_name, email=user.email, 
+                            address=user.address, balance=user.balance, 
+                            order_history=order_history, page=page, 
+                            total_pages=total_pages, form=form)
+                            
+@bp.route('/user/<hashed_email>')
+def view_user(hashed_email):
+    users = User.get_all()
+    found_user = None
+    
+    for user in users:
+        user_hash = sha256(user.email.encode()).hexdigest()
+        if user_hash == hashed_email:
+            found_user = user
+            break
+    
+    if not found_user:
+        abort(404)
+        
+    return render_template('view_user.html', 
+                         full_name=found_user.full_name,
+                         email=found_user.email,
+                         seller_id=found_user.id)
+
+@bp.route('/api/user/<int:user_id>/email')
+def get_user_email(user_id):
+    email = User.get_email_from_id(user_id)
+    if not email:
+        return jsonify({'error': 'User not found'}), 404
+    return jsonify({'email': email})
 
