@@ -48,39 +48,42 @@ def search():
 
 @bp.route('/add_inventory', methods=['GET', 'POST'])
 def add_inventory():
-    form = InventoryForm()
-    if form.validate_on_submit():
-        try:
-            user_id = request.cookies.get('id')
-            if not user_id:
-                flash("User ID not found. Please log in.", "error")
-                return redirect(url_for('users.login'))
+    try:
+        user_id = request.cookies.get('id')  # Assuming the user ID is stored in cookies
+        if not user_id:
+            return jsonify({"error": "User ID not found. Please log in."}), 400
 
-            if not Inventory.category_exists(form.category_name.data):
-                Inventory.add_category(form.category_name.data)
+        # Get JSON data
+        data = request.get_json()
 
-            result = Inventory.add(
-                user_id,
-                form.category_name.data,
-                form.name.data,
-                form.description.data,
-                form.image_url.data,
-                form.price.data,
-                form.quantity.data
-            )
+        # Extract fields from JSON
+        category_name = data.get('category_name')
+        name = data.get('name')
+        description = data.get('description')
+        image_url = data.get('image_url')
+        price = data.get('price')
+        quantity = data.get('quantity')
 
-            if result:
-                flash('Item added successfully!', 'success')
-                return redirect(url_for('users.view_account'))
-            else:
-                flash('Failed to add item to inventory.', 'error')
+        # Validate required fields
+        if not category_name or not name or not description or not image_url or price is None or quantity is None:
+            return jsonify({"error": "All fields are required."}), 400
 
-        except Exception as e:
-            print(f"Error adding to inventory: {e}")
-            flash('An error occurred while adding the item.', 'error')
+        # Check if the category exists, create it if it doesn't
+        if not Inventory.category_exists(category_name):
+            Inventory.add_category(category_name)
 
-    return render_template('account.html', form=form)
+        # Add the product and inventory
+        result = Inventory.add(user_id, category_name, name, description, image_url, price, quantity)
+        if result:
+            return jsonify({"success": "Item added successfully!"}), 200
+        else:
+            return jsonify({"error": "Failed to add item to inventory."}), 500
 
+    except Exception as e:
+        print(f"Error adding to inventory: {e}")
+        return jsonify({"error": "An error occurred while adding the item."}), 500
+
+    
 @bp.route('/api/delete_product', methods=['DELETE'])
 def delete_product():
     try:
@@ -120,7 +123,6 @@ def update_quantity():
     except Exception as e:
         print(f"Error updating quantity: {e}")
         return jsonify({"error": "An unexpected error occurred"}), 500
-
 
 @bp.route('/inventory', methods=['GET'])
 def inventory_page():
