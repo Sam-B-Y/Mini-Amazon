@@ -21,7 +21,7 @@
       </select>
     </div>
 
-    <div class="input-group" style="width: 50%;">
+    <div class="input-group" style="width: 50%">
       <input
         type="text"
         id="orderSearchInput"
@@ -39,14 +39,18 @@
   async function loadOrders() {
     try {
       const statusFilter = document.getElementById("orderStatusFilter").value;
-      const searchQuery = document.getElementById("orderSearchInput").value.trim();
+      const searchQuery = document
+        .getElementById("orderSearchInput")
+        .value.trim();
       const ordersContainer = document.getElementById("ordersContainer");
 
       ordersContainer.innerHTML = "";
 
       // Construct API URL with search and status filters
       const response = await fetch(
-        `/orders/api/seller_orders?status=${encodeURIComponent(statusFilter)}&search=${encodeURIComponent(searchQuery)}`
+        `/orders/api/seller_orders?status=${encodeURIComponent(
+          statusFilter
+        )}&search=${encodeURIComponent(searchQuery)}`
       );
       const data = await response.json();
 
@@ -146,7 +150,6 @@
   // Load orders when the page loads
   loadOrders();
 </script>
-
 
 <style>
   .card {

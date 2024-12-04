@@ -46,8 +46,6 @@ def add_item():
     quantity = request.form.get('quantity')
     seller_id = request.form.get('seller_id')
 
-    print(product_id, quantity, seller_id)
-
     if not product_id or not quantity:
         flash('Invalid request. Please try again.', 'danger')
         return redirect(url_for('cart.cart'))

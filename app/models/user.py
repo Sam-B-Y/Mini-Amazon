@@ -152,3 +152,11 @@ FROM Users
         ''', user_id=user_id)
         return rows[0] if rows else None
     
+    @staticmethod
+    def save(self):
+        app.db.execute('''
+    UPDATE Users
+    SET email = :email, full_name = :full_name, address = :address, balance = :balance
+    WHERE user_id = :user_id
+    ''', user_id=self.id, email=self.email, full_name=self.full_name, address=self.address, balance=self.balance)
+    

@@ -3,7 +3,7 @@
 <div class="container mt-5 sellerinfo">
   <div class="text-light">
     <header class="mb-4">
-      <h1>Seller Page of {{ full_name }}</h1>
+      <h1>User Page of {{ full_name }}</h1>
     </header>
 
     <div class="seller-info mb-4">
@@ -11,57 +11,11 @@
         <div class="col-md-3 font-weight-bold">Email:</div>
         <div class="col-md-9">{{ email }}</div>
       </div>
-      <div class="row align-items-center">
-        <div class="col-md-3 font-weight-bold">Rating:</div>
-        <div class="col-md-9">
-          <div class="star-rating d-flex align-items-center">
-            {% set average_rating = reviews | map(attribute='rating') | sum /
-            reviews | length if reviews else 0 %} {% for i in range(1, 6) %} {%
-            if average_rating >= i %}
-            <i class="fa fa-star filled"></i>
-            {% elif average_rating > i - 1 %}
-            <i
-              class="fa fa-star filled fractional"
-              style="--fraction-width: {{ (average_rating - (i - 1)) * 100 }}%;"
-            ></i>
-            {% else %}
-            <i class="fa fa-star empty"></i>
-            {% endif %} {% endfor %}
-            <span class="ml-2">({{ reviews|length if reviews else 0 }})</span>
-          </div>
-        </div>
+      <div class="row mb-2">
+        <div class="col-md-3 font-weight-bold">ID:</div>
+        <div class="col-md-9">{{ id }}</div>
       </div>
     </div>
-
-    <section class="reviews-section">
-      <h2 class="mb-3" style="color: #fff">Reviews</h2>
-      {% if reviews %} {% for review in reviews %}
-      <div class="card mb-3">
-        <div class="card-body">
-          <div class="d-flex align-items-center mb-2">
-            <div class="star-rating centered-stars">
-              {% for i in range(1, 6) %} {% if review.rating >= i %}
-              <i class="fa fa-star filled"></i>
-              {% elif review.rating > i - 1 %}
-              <i
-                class="fa fa-star filled fractional"
-                style="--fraction-width: {{ (review.rating - (i - 1)) * 100 }}%;"
-              ></i>
-              {% else %}
-              <i class="fa fa-star empty"></i>
-              {% endif %} {% endfor %}
-            </div>
-          </div>
-          <p class="mb-1">{{ review.comment }}</p>
-          <small class="text-muted"
-            >Added at: {{ review.added_at }} by {{ review.full_name }}</small
-          >
-        </div>
-      </div>
-      {% endfor %} {% else %}
-      <p class="text-muted">No reviews yet.</p>
-      {% endif %}
-    </section>
   </div>
 </div>
 
