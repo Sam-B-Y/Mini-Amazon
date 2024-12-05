@@ -46,8 +46,6 @@ def add_item():
     quantity = request.form.get('quantity')
     seller_id = request.form.get('seller_id')
 
-    print(product_id, quantity, seller_id)
-
     if not product_id or not quantity:
         flash('Invalid request. Please try again.', 'danger')
         return redirect(url_for('cart.cart'))
@@ -84,5 +82,17 @@ def remove_item():
         flash('Item removed from cart.', 'success')
     else:
         flash('Failed to remove item. Please try again.', 'danger')
+
+    return redirect(url_for('cart.cart'))
+
+
+@bp.route('/cart/checkout', methods=['POST'])
+@login_required
+def checkout():
+    success = Cart.checkout(current_user.id)
+    if success == "success":
+        flash('Checkout successful.', 'success')
+    else:
+        flash(f'Failed to checkout. Error: {success}.', 'danger')
 
     return redirect(url_for('cart.cart'))

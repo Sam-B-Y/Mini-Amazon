@@ -68,3 +68,26 @@ ORDER BY ordered_time DESC
             }
             for row in rows if status_filter == "" or row[6] == status_filter
         ]
+
+
+    @staticmethod
+    def mark_order_as_complete(order_id: int, seller_id: int) -> bool:
+        try:
+            # Execute the update query
+            rows_affected = app.db.execute('''
+            UPDATE Orders
+            SET status = 'Complete'
+            WHERE order_id = :order_id
+            AND order_id IN (
+                SELECT DISTINCT order_id
+                FROM OrderItems
+                WHERE seller_id = :seller_id
+            )
+            ''', order_id=order_id, seller_id=seller_id)
+
+            # Check if any rows were updated
+            return rows_affected > 0
+        except Exception as e:
+            print(f"Error marking order as complete: {e}")
+            return False
+

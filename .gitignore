@@ -9,6 +9,7 @@ poetry.lock
 
 .flaskenv
 
+
 # C extensions
 *.so
 

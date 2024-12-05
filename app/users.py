@@ -87,6 +87,49 @@ def logout():
     logout_user()
     return redirect(url_for('index.index'))
 
+
+@bp.route('/add_funds', methods=['POST'])
+def add_funds():
+    id = int(request.cookies.get("id"))
+    user = User.get(id)
+    
+    if user is None:
+        return jsonify({"error": "User not found"}), 404
+
+    amount = float(request.form['amount'])
+    if amount <= 0:
+        flash(f"Invalid amount.", "danger")
+        return redirect(url_for('users.edit_account'))
+
+    user.balance = float(user.balance) + amount
+    user.save(user)
+    flash(f"Successfully added ${amount:.2f} to your account.", "success")
+    return redirect(url_for('users.edit_account'))
+
+@bp.route('/withdraw_funds', methods=['POST'])
+def withdraw_funds():
+    id = int(request.cookies.get("id"))
+    user = User.get(id)
+
+    user.balance = float(user.balance)
+
+    if user is None:
+        return jsonify({"error": "User not found"}), 404
+
+    amount = float(request.form['amount'])
+    if amount <= 0:
+        flash(f"Invalid amount.", "danger")
+        return redirect(url_for('users.edit_account'))
+
+    if amount > user.balance:
+        flash(f"Insufficient funds.", "danger")
+        return redirect(url_for('users.edit_account'))
+
+    user.balance -= amount
+    user.save(user)
+    flash(f"Successfully withdrew ${amount:.2f} from your account.", "success")
+    return redirect(url_for('users.edit_account'))
+
 @bp.route('/edit_account', methods=['GET', 'POST'])
 def edit_account():
     id = int(request.cookies.get("id"))
@@ -95,20 +138,35 @@ def edit_account():
     if user is None:
         logout_user()
         return redirect(url_for('users.login'))
-    
-    form = UserInfoForm()
-    if form.validate_on_submit():
-        user.full_name = form.full_name.data
-        user.address = form.address.data
-        user.balance = form.balance.data
-        user.save()
-        flash('Your changes have been saved.')
-        
-        return redirect(url_for('users.edit_account'))
-    
-    elif request.method == 'GET':
 
-        return render_template('account/edit_account.html', title='Edit Account', full_name=user.full_name, address=user.address, balance=user.balance, email=user.email, form=form)
+    if request.method == 'POST':
+        form_id = request.form.get('form_id')
+        if form_id == 'full_name':
+            full_name = request.form.get('full_name', '').strip()
+            if full_name:
+                user.full_name = full_name
+                user.save(user)
+                flash("Full Name updated successfully.", "success")
+            else:
+                flash("Invalid full name provided.", "danger")
+        elif form_id == 'address':
+            address = request.form.get('address', '').strip()
+            if address:
+                user.address = address
+                user.save(user)
+                flash("Address updated successfully.", "success")
+            else:
+                flash("Invalid address provided.", "danger")
+        else:
+            flash("Unknown form submitted.", "danger")
+        return redirect(url_for('users.edit_account'))
+
+    return render_template('account/edit_account.html', 
+                           title='Edit Account', 
+                           full_name=user.full_name, 
+                           address=user.address, 
+                           balance=user.balance, 
+                           email=user.email)
 
 @bp.route('/purchase_history', methods=['GET'])
 def purchase_history():
@@ -188,7 +246,7 @@ def view_account():
     return render_template('account/main.html', title="View Account")
 
                         
-@bp.route('/seller/<id>')
+@bp.route('/user/<id>')
 def view_user(id):
     user = User.get(id)
     
@@ -198,14 +256,16 @@ def view_user(id):
     is_seller = User.is_seller(id)
 
     if not is_seller:
-        abort(404)
+        return render_template('view_user.html', 
+                         full_name=user.full_name,
+                         email=user.email, id=user.id)
 
     ratings = Review.get_seller_reviews(id)
         
-    return render_template('view_user.html', 
+    return render_template('view_seller.html', 
                          full_name=user.full_name,
                          email=user.email,
-                         seller_id=user.id, reviews=ratings)
+                         seller_id=user.id, reviews=ratings, address=user.address)
 
 @bp.route('/api/user/<int:user_id>/email')
 def get_user_email(user_id):

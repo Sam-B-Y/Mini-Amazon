@@ -116,3 +116,127 @@ class Cart:
         except Exception as e:
             print(f"Error removing item from cart: {e}")
             return False
+        
+    @staticmethod
+    def checkout(user_id):
+        """
+        Process the checkout for a user, updating balances and inventory.
+        """
+        try:
+
+
+            user_row = app.db.execute("""
+                SELECT balance
+                FROM users
+                WHERE user_id = :user_id
+            """, user_id=user_id)
+
+            if not user_row:
+                print("User not found.")
+                return "User not found."
+
+            cart_items = app.db.execute("""
+                SELECT cart_item_id, product_id, seller_id, quantity
+                FROM CartItems
+                WHERE user_id = :user_id
+            """, user_id=user_id)
+
+            if not cart_items:
+                print("Cart is empty.")
+                return "Empty cart."
+
+
+            user_balance = user_row[0][0]
+            total_cost = 0
+            items_to_purchase = []
+            seller_totals = {}
+
+            for item in cart_items:
+                cart_item_id, product_id, seller_id, quantity = item
+                inventory_row = app.db.execute("""
+                    SELECT quantity
+                    FROM inventory
+                    WHERE seller_id = :seller_id AND product_id = :product_id
+                """, seller_id=seller_id, product_id=product_id)
+
+                if not inventory_row:
+                    print(f"Product {product_id} not found in inventory of seller {seller_id}.")
+                    product_name = app.db.execute("""
+                        SELECT name
+                        FROM products
+                        WHERE product_id = :product_id
+                    """, product_id=product_id)[0][0]
+
+                    print(f"Product name: {product_name}")
+                    return f"Product {product_name} not found in inventory."
+
+                inventory_quantity = inventory_row[0][0]
+                if inventory_quantity < quantity:
+                    product_name = app.db.execute("""
+                        SELECT name
+                        FROM products
+                        WHERE product_id = :product_id
+                    """, product_id=product_id)[0][0]
+
+                    print(f"Insufficient quantity of {product_name} in inventory.")
+                    
+                    return f"Insufficient quantity of {product_name} in inventory."
+
+                price_row = app.db.execute("""
+                    SELECT price
+                    FROM products
+                    WHERE product_id = :product_id
+                """, product_id=product_id)
+
+                unit_price = price_row[0][0]
+                total_cost += unit_price * quantity
+                items_to_purchase.append((product_id, seller_id, quantity, unit_price))
+
+                seller_totals[seller_id] = seller_totals.get(seller_id, 0) + unit_price * quantity
+
+            if user_balance < total_cost:
+                print("User does not have enough balance.")
+                return "Insufficient balance."
+
+            app.db.execute("""
+                UPDATE users
+                SET balance = balance - :total_cost
+                WHERE user_id = :user_id
+            """, total_cost=total_cost, user_id=user_id)
+
+            for seller_id, amount in seller_totals.items():
+                app.db.execute("""
+                    UPDATE users
+                    SET balance = balance + :amount
+                    WHERE user_id = :seller_id
+                """, amount=amount, seller_id=seller_id)
+
+            for product_id, seller_id, quantity, _ in items_to_purchase:
+                app.db.execute("""
+                    UPDATE inventory
+                    SET quantity = quantity - :quantity
+                    WHERE seller_id = :seller_id AND product_id = :product_id
+                """, quantity=quantity, seller_id=seller_id, product_id=product_id)
+
+            order_id_rows = app.db.execute("""
+                INSERT INTO orders(user_id, status, ordered_time)
+                VALUES(:user_id, 'Ordered', NOW())
+                RETURNING order_id
+            """, user_id=user_id)
+            order_id = order_id_rows[0][0]
+
+            for product_id, seller_id, quantity, unit_price in items_to_purchase:
+                app.db.execute("""
+                    INSERT INTO OrderItems(order_id, product_id, seller_id, quantity, unit_price)
+                    VALUES(:order_id, :product_id, :seller_id, :quantity, :unit_price)
+                """, order_id=order_id, product_id=product_id, seller_id=seller_id, quantity=quantity, unit_price=unit_price)
+
+            app.db.execute("""
+                DELETE FROM cartitems
+                WHERE user_id = :user_id
+            """, user_id=user_id)
+
+            return "success"
+        except Exception as e:
+            print(f"Error during checkout: {e}")
+            return "Error during checkout."

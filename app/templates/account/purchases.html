@@ -3,7 +3,7 @@
 <div class="container my-5">
   <h3>Purchase History</h3>
   <div class="order-history">
-    {% for purchase in order_history %}
+    {% if order_history %} {% for purchase in order_history %}
     <div class="card mb-4">
       <div class="card-header d-flex justify-content-between">
         <span class="text-muted">Order Placed: {{ purchase.ordered_time }}</span>
@@ -24,10 +24,15 @@
             <p class="text-muted">{{ purchase.description|truncate(255) }}</p>
             <p>Category: {{ purchase.category_name }}</p>
             <p>Quantity: {{ purchase.quantity }}</p>
+            <p>Status: {{ purchase.status }}</p>
           </div>
           <div class="col-md-2 text-end">
-            <a href="/seller/{{ purchase.seller_id }}" class="btn btn-link">View Seller</a>
-            <a href="/products/{{ purchase.product_id }}" class="btn btn-link">View Product</a>
+            <a href="/seller/{{ purchase.seller_id }}" class="btn btn-link"
+              >View Seller</a
+            >
+            <a href="/products/{{ purchase.product_id }}" class="btn btn-link"
+              >View Product</a
+            >
           </div>
         </div>
       </div>
@@ -39,22 +44,25 @@
         </button>
       </div>
     </div>
-    {% endfor %}
-  </div>
 
-  <nav aria-label="Page navigation">
-    <ul class="pagination justify-content-center">
-      <li class="page-item {% if page <= 1 %}disabled{% endif %}">
-        <button class="page-link" onclick="cP(-1)">Previous</button>
-      </li>
-      <li class="page-item disabled">
-        <span class="page-link">Page {{ page }} of {{ total_pages }}</span>
-      </li>
-      <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
-        <button class="page-link" onclick="cP(1)">Next</button>
-      </li>
-    </ul>
-  </nav>
+    {% endfor %}
+    <nav aria-label="Page navigation">
+      <ul class="pagination justify-content-center">
+        <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+          <button class="page-link" onclick="cP(-1)">Previous</button>
+        </li>
+        <li class="page-item disabled">
+          <span class="page-link">Page {{ page }} of {{ total_pages }}</span>
+        </li>
+        <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+          <button class="page-link" onclick="cP(1)">Next</button>
+        </li>
+      </ul>
+    </nav>
+    {% else %}
+    <p class="text-center text-muted">No purchases yet</p>
+    {% endif %}
+  </div>
 </div>
 
 <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
