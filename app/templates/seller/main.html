@@ -23,16 +23,10 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <button
-            class="btn btn-primary w-100 mb-3"
-            id="createNewProductBtn"
-          >
+          <button class="btn btn-primary w-100 mb-3" id="createNewProductBtn">
             Create New Product
           </button>
-          <button
-            class="btn btn-secondary w-100"
-            id="selectExistingProductBtn"
-          >
+          <button class="btn btn-secondary w-100" id="selectExistingProductBtn">
             Select Existing Product
           </button>
         </div>
@@ -152,22 +146,25 @@
       <div class="card text-dark bg-white mb-3">
         <div class="card-header">Average Rating</div>
         <div class="card-body">
+          {% if seller_stats.average_rating is not none %}
           <h5 class="card-title">
             <div class="star-rating">
-              {% for i in range(1, 6) %}
-                {% if seller_stats.average_rating >= i %}
-                <i class="fa fa-star filled"></i>
-                {% elif seller_stats.average_rating > i - 1 %}
-                <i
-                  class="fa fa-star filled fractional"
-                  style="--fraction-width: {{ (seller_stats.average_rating - (i - 1)) * 100 }}%;"
-                ></i>
-                {% else %}
-                <i class="fa fa-star empty"></i>
-                {% endif %}
-              {% endfor %}
+              {% for i in range(1, 6) %} {% if seller_stats.average_rating >= i
+              %}
+              <i class="fa fa-star filled"></i>
+              {% elif seller_stats.average_rating > i - 1 %}
+              <i
+                class="fa fa-star filled fractional"
+                style="--fraction-width: {{ (seller_stats.average_rating - (i - 1)) * 100 }}%;"
+              ></i>
+              {% else %}
+              <i class="fa fa-star empty"></i>
+              {% endif %} {% endfor %}
             </div>
           </h5>
+          {% else %}
+          <h5 class="card-title">No Ratings Yet</h5>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -210,15 +207,19 @@
 
 <script>
   // JavaScript for Handling Modals
-  document.getElementById("createNewProductBtn").addEventListener("click", () => {
-    document.getElementById("newProductForm").classList.remove("d-none");
-    document.getElementById("existingProductForm").classList.add("d-none");
-  });
+  document
+    .getElementById("createNewProductBtn")
+    .addEventListener("click", () => {
+      document.getElementById("newProductForm").classList.remove("d-none");
+      document.getElementById("existingProductForm").classList.add("d-none");
+    });
 
-  document.getElementById("selectExistingProductBtn").addEventListener("click", () => {
-    document.getElementById("existingProductForm").classList.remove("d-none");
-    document.getElementById("newProductForm").classList.add("d-none");
-  });
+  document
+    .getElementById("selectExistingProductBtn")
+    .addEventListener("click", () => {
+      document.getElementById("existingProductForm").classList.remove("d-none");
+      document.getElementById("newProductForm").classList.add("d-none");
+    });
 
   document
     .getElementById("newProductForm")
@@ -261,7 +262,9 @@
 
       try {
         // Fetch existing products from the new endpoint
-        const response = await fetch(`/products/search_existing?q=${encodeURIComponent(searchQuery)}`);
+        const response = await fetch(
+          `/products/search_existing?q=${encodeURIComponent(searchQuery)}`
+        );
         const data = await response.json();
 
         if (data.products.length === 0) {
@@ -282,7 +285,9 @@
                 <p><strong>Price:</strong> $${product.price.toFixed(2)}</p>
                 <button 
                   class="btn btn-success" 
-                  onclick="createListingForProduct(${product.product_id}, '${product.name}')"
+                  onclick="createListingForProduct(${product.product_id}, '${
+            product.name
+          }')"
                 >
                   Create Listing for This Product
                 </button>
@@ -293,7 +298,8 @@
         });
       } catch (error) {
         console.error("Error fetching products:", error);
-        resultsContainer.innerHTML = "<p>Failed to fetch products. Try again later.</p>";
+        resultsContainer.innerHTML =
+          "<p>Failed to fetch products. Try again later.</p>";
       }
     });
 
