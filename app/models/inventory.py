@@ -81,6 +81,39 @@ class Inventory:
         return len(rows) > 0
 
     @staticmethod
+    def create_listing(seller_id, product_id, quantity):
+        """
+        Insert a new listing for an existing product into the Inventory table.
+        """
+        try:
+            # Check if the seller already has an inventory entry for this product
+            rows = app.db.execute('''
+                SELECT inventory_id
+                FROM Inventory
+                WHERE seller_id = :seller_id AND product_id = :product_id
+            ''', seller_id=seller_id, product_id=product_id)
+
+            if rows:
+                # Update existing inventory if it already exists
+                app.db.execute('''
+                    UPDATE Inventory
+                    SET quantity = quantity + :quantity
+                    WHERE seller_id = :seller_id AND product_id = :product_id
+                ''', seller_id=seller_id, product_id=product_id, quantity=quantity)
+            else:
+                # Insert a new inventory record
+                app.db.execute('''
+                    INSERT INTO Inventory (seller_id, product_id, quantity)
+                    VALUES (:seller_id, :product_id, :quantity)
+                ''', seller_id=seller_id, product_id=product_id, quantity=quantity)
+
+            return True
+        except Exception as e:
+            logging.error(f"Error creating listing: {e}")
+            return False
+
+        
+    @staticmethod
     def add_category(category_name):
         try:
             app.db.execute('''
