@@ -1,0 +1,210 @@
+{% extends "base.html" %} {% block content %}
+<div class="product-detail-container">
+  <div class="product-main">
+    <img
+      src="{{ product.image_url }}"
+      alt="{{ product.name }}"
+      class="product-image"
+    />
+    <div class="product-info">
+      <h1>{{ product.name }}</h1>
+      <p class="price">${{ "%.2f"|format(product.price) }}</p>
+      <p class="category">
+        Category:
+        <a href="/category/{{product.category_name}}"
+          >{{ product.category_name }}</a
+        >
+        <br>
+Sold by: <a href="/user/{{ inventory.seller_id }}">{{ inventory.seller_name }}</a> <br> Available Quantity: {{ inventory.quantity }}
+      </p>
+      <p class="rating">
+        <div class="star-rating">
+          {% set average_rating = reviews | map(attribute='rating') | sum / reviews | length if reviews else 0 %}
+          {% for i in range(1, 6) %} {% if average_rating >= i %}
+          <i class="fa fa-star filled"></i>
+          {% elif average_rating > i - 1 %}
+          <i
+            class="fa fa-star filled fractional"
+            style="--fraction-width: {{ (average_rating - (i - 1)) * 100 }}%;"
+          ></i>
+          {% else %}
+          <i class="fa fa-star empty"></i>
+          {% endif %} {% endfor %}
+        <span style="font-size: medium;">({{ reviews|length if reviews else 0 }} ratings)</span>
+        </div>
+      </p>
+      <div class="sellers-section">
+        <div class="sellers-list">
+              <form class="add-to-cart-form" data-seller-id="{{ inventory.seller_id }}">
+                <input type="number" name="quantity" min="1" max="{{ inventory.quantity }}" value="1" />
+                <button type="submit" class="add-to-cart-btn">
+  <i class="fa fa-shopping-basket"></i> Add to Cart
+</button>
+              </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="description">{{ product.description }}</p>
+
+
+  <div class="reviews-section">
+    <h2>Product Reviews</h2>
+    <div class="center-review">
+    {% if reviews %} {% for review in reviews %}
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-2">
+            <div class="star-rating centered-stars">
+              {% for i in range(1, 6) %} {% if review.rating >= i %}
+              <i class="fa fa-star filled"></i>
+              {% elif review.rating > i - 1 %}
+              <i
+                class="fa fa-star filled fractional"
+                style="--fraction-width: {{ (review.rating - (i - 1)) * 100 }}%;"
+              ></i>
+              {% else %}
+              <i class="fa fa-star empty"></i>
+              {% endif %} {% endfor %}
+            </div>
+          </div>
+          <p class="mb-1">{{ review.comment }}</p>
+          <small class="text-muted"
+            >Added at: {{ review.added_at }} by {{ review.full_name }}</small
+          >
+        </div>
+      </div>
+      {% endfor %} {% else %}
+      <p class="text-muted">No reviews yet.</p>
+      {% endif %}
+  </div></div>
+</div>
+
+<script>
+  document.querySelectorAll(".add-to-cart-form").forEach((form) => {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const sellerId = form.dataset.sellerId;
+      const quantity = form.querySelector('input[name="quantity"]').value;
+
+      try {
+        const formData = new FormData();
+        formData.append("product_id", "{{ product.product_id }}");
+        formData.append("seller_id", sellerId);
+        formData.append("quantity", parseInt(quantity));
+
+        const response = await fetch("/cart/add", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.ok) {
+          alert("Added to cart successfully!");
+        } else {
+          alert("Failed to add to cart. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("An error occurred. Please try again.");
+      }
+    });
+  });
+</script>
+
+<style>
+  .product-detail-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .product-main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 40px;
+  }
+
+  .product-image {
+    width: 80%;
+    max-height: 500px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  .product-info {
+    padding: 20px;
+  }
+
+  .price {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ad5d5d;
+  }
+
+  .sellers-section,
+  .reviews-section {
+    margin-top: 40px;
+  }
+
+  .sellers-list,
+  .reviews-list {
+    display: grid;
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .seller-card,
+  .review-card {
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+  }
+
+  .add-to-cart-form {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .add-to-cart-btn {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .add-to-cart-btn:hover {
+    background-color: #2980b9;
+  }
+
+  .rating {
+    color: #f1c40f;
+    font-size: 18px;
+  }
+
+   .card {
+    border: none;
+    background: #1c1c1e;
+    color: #fff;
+    width: 80%;
+    text-align: center;
+  }
+
+  .card .card-body {
+    padding: 1rem;
+  }
+  
+
+  .center-review {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+</style>
+{% endblock %}

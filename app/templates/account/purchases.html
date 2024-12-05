@@ -1,0 +1,256 @@
+{% extends "base.html" %} {% block content %}
+
+<div class="container my-5">
+  <h3>Purchase History</h3>
+  <div class="order-history">
+    {% if order_history %} {% for purchase in order_history %}
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between">
+        <span class="text-muted"
+          >Order Placed: {{ purchase.ordered_time }}</span
+        >
+        <span class="text-muted">Total: ${{ purchase.price }}</span>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-2">
+            <img
+              src="{{ purchase.image_url }}"
+              alt="{{ purchase.name }}"
+              class="img-fluid rounded"
+              style="
+                display: inline-block;
+                width: 100px;
+                height: 100px;
+                overflow: hidden;
+              "
+            />
+          </div>
+          <div class="col-md-8">
+            <h5>{{ purchase.name }}</h5>
+            <p class="text-muted">{{ purchase.description|truncate(255) }}</p>
+            <p>Category: {{ purchase.category_name }}</p>
+            <p>Quantity: {{ purchase.quantity }}</p>
+            <p>Status: {{ purchase.status }}</p>
+          </div>
+          <div class="col-md-2 text-end">
+            <a href="/user/{{ purchase.seller_id }}" class="btn btn-link"
+              >View Seller</a
+            >
+            <a href="/products/{{ purchase.product_id }}" class="btn btn-link"
+              >View Product</a
+            >
+          </div>
+        </div>
+      </div>
+      <div class="card-footer d-flex justify-content-between">
+        <p>Order ID: {{purchase.order_id}}</p>
+        <button
+          class="btn btn-primary btn-sm"
+          onclick="openReviewModal('{{ purchase.product_id }}', '{{ purchase.name }}')"
+        >
+          Write a Review
+        </button>
+      </div>
+    </div>
+
+    {% endfor %}
+    <nav aria-label="Page navigation">
+      <ul class="pagination justify-content-center">
+        <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+          <button class="page-link" onclick="cP(-1)">Previous</button>
+        </li>
+        <li class="page-item disabled">
+          <span class="page-link">Page {{ page }} of {{ total_pages }}</span>
+        </li>
+        <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+          <button class="page-link" onclick="cP(1)">Next</button>
+        </li>
+      </ul>
+    </nav>
+    {% else %}
+    <p class="text-center text-muted">No purchases yet</p>
+    {% endif %}
+  </div>
+</div>
+
+<div
+  class="modal fade"
+  id="reviewModal"
+  tabindex="-1"
+  aria-labelledby="reviewModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="reviewModalLabel">Write a Review</h5>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="reviewForm">
+          <input type="hidden" name="product_id" id="reviewProductId" />
+          <div class="mb-3">
+            <label for="reviewContent" class="form-label">Review</label>
+            <textarea
+              class="form-control"
+              id="reviewContent"
+              name="content"
+              rows="3"
+              required
+            ></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Rating</label>
+            <div id="starRating" class="d-flex">
+              <i class="fa fa-star" data-value="1"></i>
+              <i class="fa fa-star" data-value="2"></i>
+              <i class="fa fa-star" data-value="3"></i>
+              <i class="fa fa-star" data-value="4"></i>
+              <i class="fa fa-star" data-value="5"></i>
+            </div>
+            <input type="hidden" id="reviewRating" name="rating" required />
+          </div>
+          <button type="submit" class="btn btn-primary">Submit Review</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .card-footer p {
+    margin: 0;
+    color: #353333;
+  }
+
+  .card {
+    color: #000;
+  }
+
+  #starRating .fa-star {
+    font-size: 2rem;
+    color: #ddd;
+    cursor: pointer;
+    margin-right: 0.5rem;
+  }
+
+  #starRating .fa-star.checked {
+    color: #ffc107;
+  }
+</style>
+
+<script>
+  function openReviewModal(productId, productName) {
+    document.querySelectorAll("#starRating .fa-star").forEach((star) => {
+      star.classList.remove("checked");
+    });
+    document.getElementById("reviewRating").value = "";
+    const modal = new bootstrap.Modal(document.getElementById("reviewModal"));
+    document.getElementById("reviewProductId").value = productId;
+    document.getElementById(
+      "reviewModalLabel"
+    ).textContent = `Review for ${productName}`;
+    modal.show();
+  }
+
+  document.querySelectorAll("#starRating .fa-star").forEach((star) => {
+    star.addEventListener("click", function () {
+      const rating = this.getAttribute("data-value");
+      document.getElementById("reviewRating").value = rating;
+      document.querySelectorAll("#starRating .fa-star").forEach((s) => {
+        s.classList.remove("checked");
+      });
+      for (let i = 0; i < rating; i++) {
+        document
+          .querySelectorAll("#starRating .fa-star")
+          [i].classList.add("checked");
+      }
+    });
+  });
+
+  document
+    .getElementById("reviewForm")
+    .addEventListener("submit", async function (event) {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+
+      if (!data.rating || parseInt(data.rating) < 1) {
+        alert("Please select a rating of at least 1 star.");
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/reviews/submit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          alert("Review submitted successfully!");
+          window.location.href = "/reviewsrecent";
+        } else {
+          alert(
+            result.error || "An error occurred while submitting the review."
+          );
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("An unexpected error occurred.");
+      }
+    });
+
+  async function cP(offset) {
+    let currentPage =
+      parseInt(new URL(window.location.href).searchParams.get("page")) || 1;
+    const totalPages = parseInt("{{ total_pages }}", 10);
+    const newPage = currentPage + offset;
+
+    if (newPage < 1 || newPage > totalPages) return;
+
+    const url = new URL(window.location.href);
+    url.searchParams.set("page", newPage);
+    url.hash = "purchase-history";
+
+    try {
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to load new page");
+      }
+
+      const newContent = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(newContent, "text/html");
+      const newHistory = doc.querySelector(".order-history");
+      const newPagination = doc.querySelector(".pagination");
+
+      document.querySelector(".order-history").innerHTML = newHistory.innerHTML;
+      document.querySelector(".pagination").innerHTML = newPagination.innerHTML;
+
+      history.pushState(null, "", url.toString());
+    } catch (error) {
+      console.error("Error fetching new page:", error);
+      alert("An error occurred while loading the new page.");
+    }
+  }
+</script>
+
+{% endblock %}

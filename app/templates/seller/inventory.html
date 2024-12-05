@@ -1,0 +1,162 @@
+{% extends "base.html" %} {% block content %}
+
+<div class="container my-5">
+  <h3>Inventory</h3>
+  <div class="row" id="inventoryContainer"></div>
+</div>
+
+<script>
+  async function fetchInventory() {
+    try {
+      const userId = getCookie("id");
+      if (!userId) {
+        console.error("User ID cookie not found");
+        return;
+      }
+
+      const response = await fetch(`/api/inventory?user_id=${userId}`);
+      const data = await response.json();
+
+      if (data.error) {
+        console.error(data.error);
+        return;
+      }
+
+      const inventoryContainer = document.getElementById("inventoryContainer");
+      inventoryContainer.innerHTML = "";
+
+      data.inventory.forEach((item) => {
+        const card = document.createElement("div");
+        card.className = "col-md-4";
+        card.innerHTML = `
+          <div class="card mb-4">
+            <img
+              src="${item.image_url}"
+              class="card-img-top"
+              alt="${item.product_name}"
+              style="height: 200px; object-fit: cover;"
+            />
+            <div class="card-body">
+              <h5 class="card-title">${item.product_name}</h5>
+              <p class="card-text">${item.description}</p>
+              <p><strong>Category:</strong> ${item.category_name}</p>
+              <p><strong>Price:</strong> $${item.price}</p>
+              <p><strong>Quantity:</strong></p>
+              <div class="input-group mb-3">
+                <input
+                  type="number"
+                  id="quantity-${item.inventory_id}"
+                  value="${item.quantity}"
+                  class="form-control"
+                />
+                <button
+                  class="btn btn-primary"
+                  onclick="updateQuantity('${item.inventory_id}')"
+                >
+                  Update
+                </button>
+              </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+              <button
+                class="btn btn-danger btn-sm"
+                onclick="deleteProduct('${item.inventory_id}')"
+              >
+                Delete
+              </button>
+              <p class="text-muted">ID: ${item.inventory_id}</p>
+            </div>
+          </div>
+        `;
+        inventoryContainer.appendChild(card);
+      });
+    } catch (error) {
+      console.error("Error fetching inventory:", error);
+    }
+  }
+
+  async function updateQuantity(inventoryId) {
+    const quantityInput = document.getElementById(`quantity-${inventoryId}`);
+    const newQuantity = parseInt(quantityInput.value, 10);
+
+    if (isNaN(newQuantity) || newQuantity < 0) {
+      alert("Please enter a valid quantity.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/update_quantity`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          inventory_id: inventoryId,
+          quantity: newQuantity,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Quantity updated successfully!");
+        fetchInventory();
+      } else {
+        alert(result.error || "Failed to update quantity.");
+      }
+    } catch (error) {
+      console.error("Error updating quantity:", error);
+      alert("An unexpected error occurred.");
+    }
+  }
+
+  async function deleteProduct(inventoryId) {
+    if (!confirm("Are you sure you want to delete this product?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/delete_product`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ inventory_id: inventoryId }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Product deleted successfully!");
+        fetchInventory();
+      } else {
+        alert(result.error || "Failed to delete product.");
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      alert("An unexpected error occurred.");
+    }
+  }
+
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+  }
+
+  // Fetch inventory on page load
+  fetchInventory();
+</script>
+
+<style>
+  .card {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-footer {
+    font-size: 0.9rem;
+    color: #555;
+  }
+</style>
+
+{% endblock %}

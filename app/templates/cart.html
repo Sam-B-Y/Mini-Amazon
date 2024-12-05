@@ -1,33 +1,107 @@
 {% extends "base.html" %} {% block content %}
 
-<br /><br />
-
-<h2>Your Cart</h2>
-<table class="table table-hover table-bordered container">
-  <thead class="thead-dark">
-    <tr>
-      <th scope="col">Name</th>
-      <th scope="col">Image</th>
-      <th scope="col">Price per Item</th>
-      <th scope="col">Quantity</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for item in cart_items%}
-    <tr>
-      <th scope="row">{{item.name}}</th>
-      <td>
-        <img
-          src="{{item.image_url}}"
-          alt="Product Image"
-          width="100"
-          height="100"
-        />
-      </td>
-      <td>{{item.price}}</td>
-      <td>{{item.quantity}}</td>
-    </tr>
+<div class="container mt-5">
+  <h2 class="mb-4 text-center font-weight-bold">Your Shopping Cart</h2>
+  {% with messages = get_flashed_messages(with_categories=true) %} {% if
+  messages %}
+  <div class="flash-messages">
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
     {% endfor %}
-  </tbody>
-</table>
+  </div>
+  {% endif %} {% endwith %} {% if cart_items %} {% set ns =
+  namespace(grand_total=0) %}
+
+  <div class="card shadow-lg p-4 border-0">
+    <table class="table table-hover align-middle">
+      <thead class="thead-light">
+        <tr class="text-center">
+          <th scope="col" style="width: 30%">Product</th>
+          <th scope="col"></th>
+          <th scope="col">Price</th>
+          <th scope="col">Quantity</th>
+          <th scope="col">Total</th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in cart_items %} {% set total_price = item.price *
+        item.quantity %} {% set ns.grand_total = ns.grand_total + total_price %}
+        <tr class="text-center">
+          <td class="text-left" style="width: 20%">
+            <a href="/products/{{ item.product_id}}">{{ item.name }}</a>
+          </td>
+          <td>
+            <img
+              src="{{ item.image_url }}"
+              alt="Product Image"
+              class="rounded img-fluid"
+              style="width: 80px; height: auto"
+            />
+          </td>
+          <td class="font-weight-bold">${{ "%.2f"|format(item.price) }}</td>
+          <td>
+            <form
+              method="POST"
+              action="{{ url_for('cart.update_item') }}"
+              class="form-inline d-flex justify-content-center"
+            >
+              <input
+                type="hidden"
+                name="cart_item_id"
+                value="{{ item.cart_item_id }}"
+              />
+              <input
+                type="number"
+                name="quantity"
+                value="{{ item.quantity }}"
+                min="1"
+                class="form-control text-center"
+                style="width: 60px"
+              />
+              <button type="submit" class="btn btn-sm btn-outline-primary ml-2">
+                Update
+              </button>
+            </form>
+          </td>
+          <td class="font-weight-bold">${{ "%.2f"|format(total_price) }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('cart.remove_item') }}">
+              <input
+                type="hidden"
+                name="cart_item_id"
+                value="{{ item.cart_item_id }}"
+              />
+              <button type="submit" class="btn btn-sm btn-danger">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="text-right mt-4">
+      <h5 class="text-primary font-weight-bold">
+        Grand Total: ${{ "%.2f"|format(ns.grand_total) }}
+      </h5>
+      <!-- Checkout here -->
+    </div>
+  </div>
+
+  <form
+    method="POST"
+    action="{{ url_for('cart.checkout') }}"
+    class="text-right mt-3"
+  >
+    <button type="submit" class="btn btn-primary btn-lg">Checkout</button>
+  </form>
+
+  {% else %}
+  <div class="alert alert-info text-center mt-4 p-4">
+    <h4>Your cart is empty</h4>
+  </div>
+  {% endif %}
+</div>
+
 {% endblock %}

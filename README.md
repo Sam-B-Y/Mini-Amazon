@@ -27,3 +27,12 @@ We have decided to work on the standard project option. Since the last milestone
 ## E/R Diagram
 
 ![E/R Diagram](https://github.com/Sam-B-Y/Mini-Amazon/blob/main/pictures/ER.png)
+
+
+## Milestone 4
+
+Video: https://drive.google.com/file/d/1hvHwWSZsoIOA_Z2ztLqBKbop-4oFMvTq/view?usp=sharing
+
+The process of generating products can be found in Mini-Amazon/db/generatedData/generateProducts.py
+The process of generating users can be found in Mini-Amazon/db/generateusers.py
+The process of generating all other data can be found in Mini-Amazon/make_data.py

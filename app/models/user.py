@@ -67,6 +67,15 @@ WHERE user_id = :user_id
                               user_id=user_id)
         return User(*(rows[0])) if rows else None
 
+    def get_email_from_id(user_id):
+        rows = app.db.execute("""
+SELECT email
+FROM Users
+WHERE user_id = :user_id
+""",
+                              user_id=user_id)
+        return rows[0][0] if rows else None
+
     @staticmethod
     def update(user_id, field, new_value):
         if field == "balance":
@@ -83,16 +92,31 @@ WHERE user_id = :user_id
         return None
     
     @staticmethod
-    def get_product_history(user_id):
+    def get_product_history(user_id, page=1, per_page=10):
+        offset = (page - 1) * per_page
         rows = app.db.execute('''
-SELECT name, description, category_name, ordered_time, image_url, quantity, price
-FROM OrderItems
-JOIN Orders ON Orders.order_id = OrderItems.order_id
-JOIN Products ON Products.product_id=OrderItems.product_id                              
-WHERE user_id = :user_id
-''',
-                              user_id=user_id)
-        return rows
+            SELECT name, description, category_name, ordered_time, image_url, quantity, price, seller_id, Orders.order_id, Products.product_id, Orders.status
+            FROM OrderItems
+            JOIN Orders ON Orders.order_id = OrderItems.order_id
+            JOIN Products ON Products.product_id = OrderItems.product_id                              
+            WHERE user_id = :user_id
+            ORDER BY ordered_time DESC
+            LIMIT :per_page OFFSET :offset
+        ''', user_id=user_id, per_page=per_page, offset=offset)
+
+        total_items = app.db.execute('''
+            SELECT COUNT(*) FROM OrderItems
+            JOIN Orders ON Orders.order_id = OrderItems.order_id
+            WHERE user_id = :user_id
+        ''', user_id=user_id)[0][0]
+
+        return {
+            "rows": rows,
+            "total_items": total_items,
+            "page": page,
+            "pages": (total_items + per_page - 1) // per_page
+        }
+
 
     def is_seller(user_id):
         rows = app.db.execute('''
@@ -101,3 +125,38 @@ WHERE user_id = :user_id
             WHERE user_id = :user_id AND is_seller = TRUE
         ''', user_id=user_id)
         return len(rows) == 1
+
+    @staticmethod
+    def get_all():
+        rows = app.db.execute('''
+SELECT user_id, email, full_name, address, balance
+FROM Users
+''')
+        return [User(*row) for row in rows]
+    
+
+    @staticmethod
+    def get_seller_stats(user_id):
+        rows = app.db.execute('''
+            SELECT 
+                SUM(p.price * oi.quantity) AS total_sales, 
+                COUNT(DISTINCT o.order_id) AS total_orders,
+                AVG(r.rating) AS average_rating,
+                COUNT(DISTINCT i.product_id) AS products_listed
+            FROM OrderItems oi
+            JOIN inventory i ON i.product_id = oi.product_id
+            JOIN Products p ON p.product_id = oi.product_id
+            JOIN Orders o ON o.order_id = oi.order_id
+            LEFT JOIN Reviews r ON r.product_id = i.product_id
+            WHERE i.seller_id = :user_id
+        ''', user_id=user_id)
+        return rows[0] if rows else None
+    
+    @staticmethod
+    def save(self):
+        app.db.execute('''
+    UPDATE Users
+    SET email = :email, full_name = :full_name, address = :address, balance = :balance
+    WHERE user_id = :user_id
+    ''', user_id=self.id, email=self.email, full_name=self.full_name, address=self.address, balance=self.balance)
+    
