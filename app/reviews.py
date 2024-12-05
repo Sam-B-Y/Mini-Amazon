@@ -1,24 +1,39 @@
 from flask import jsonify, request, render_template
 from flask_login import current_user
 from .models.review import Review
+from .models.product import Product
+from .models.user import User  # Assuming there's a User model for seller details
 
 from flask import Blueprint
 bp = Blueprint('reviews', __name__)
+
 
 @bp.route('/api/reviews/product', methods=['GET'])
 def product_reviews():
     product_id, seller_id = request.args.get('product'), request.args.get('seller')
     print(request.args)
     reviews = Review.get_product_reviews(product_id, seller_id)
-    return jsonify([{'id': r.review_id, 'product_id': r.product_id, 'seller': r.seller_id, 'rating:': r.rating,'comment:':r.comment,'timestamp': r.added_at} for r in reviews])
-
+    return jsonify([{
+        'id': r.review_id,
+        'product_id': r.product_id,
+        'seller_id': r.seller_id,
+        'rating': r.rating,
+        'comment': r.comment,
+        'timestamp': r.added_at
+    } for r in reviews])
 @bp.route('/api/reviews/recent', methods=['GET'])
 def recent_reviews():
     if not current_user.is_authenticated:
         return jsonify({'error': 'Login first'}), 401
     reviews = Review.get_recent(current_user.id)
-    return jsonify([{'id': r.review_id, 'product_id': r.product_id, 'seller': r.seller_id, 'rating:': r.rating,'comment:':r.comment,'timestamp': r.added_at} for r in reviews])
-
+    
+    # Fetch product names and seller names for each review
+    for review in reviews:
+        product = Product.get(review.product_id)
+        seller = User.get(review.seller_id)  # Assuming User model has a method to get seller details
+        review.product_name = product.name if product else "Unknown Product"
+        review.seller_name = seller.full_name if seller else "Unknown Seller"
+    return jsonify([{'id': r.review_id, 'product_id': r.product_id, 'product_name': r.product_name, 'seller_id': r.seller_id, 'seller_name': r.seller_name, 'rating': r.rating,'comment':r.comment,'timestamp': r.added_at} for r in reviews])
 @bp.route('/api/reviews/submit', methods=['POST'])
 def submit_review():
     if not current_user.is_authenticated:

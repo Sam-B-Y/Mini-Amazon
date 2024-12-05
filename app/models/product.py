@@ -27,6 +27,7 @@ SELECT r.review_id, r.rating, r.comment, r.added_at, u.full_name AS reviewer_nam
 FROM Reviews r
 JOIN Users u ON r.user_id = u.user_id
 WHERE r.product_id = :product_id
+ORDER BY r.added_at DESC  
 ''', 
                               product_id=product_id)
         return [{'review_id': r[0], 'rating': r[1], 'comment': r[2], 'added_at': r[3], 'reviewer_name': r[4]} for r in rows]
