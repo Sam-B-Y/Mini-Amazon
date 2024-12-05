@@ -1,4 +1,7 @@
 from flask import current_app as app
+from flask import session
+import re
+import logging
 
 class Product:
     def __init__(self, product_id, category_name, name, description, image_url, price, created_by):
@@ -34,10 +37,10 @@ WHERE r.product_id = :product_id
     @staticmethod
     def get_sellers(product_id):
         rows = app.db.execute('''
-SELECT s.seller_id, s.seller_name, s.quantity
-FROM Sellers s
-JOIN Inventory i ON s.seller_id = i.seller_id
-WHERE i.product_id = :product_id
+SELECT u.user_id AS seller_id, u.full_name AS seller_name, i.quantity
+FROM Users u
+JOIN Inventory i ON u.user_id = i.seller_id
+WHERE i.product_id = :product_id AND u.is_seller = TRUE
 ''', 
                               product_id=product_id)
         return [{'seller_id': r[0], 'seller_name': r[1], 'quantity': r[2]} for r in rows]
@@ -142,9 +145,60 @@ FROM Products
             'avg_review_score': row[8],
             'review_count': row[9]
         } for row in rows]
-
     
-# move to standalone file
+    @staticmethod
+    def best_search_by_keyword(keywords):
+        results = Product.search_by_keyword(keywords)
+
+        if not results:
+            return False
+
+        return sorted(results, key=lambda x: x['relevance'], reverse=True)[0]
+
+    @staticmethod
+    def handle_follow_up(message, product):
+        message = message.lower()
+        if 'price' in message:
+            return f"The price of **{product.name}** is **${product.price}**.", False
+        elif 'description' in message:
+            return f"**Description:** {product.description}", False
+        elif 'image' in message:
+            return f"**Image URL:** {product.image_url}", False
+        elif 'buy' in message or 'purchase' in message:
+            return f"You can purchase **{product.name}** for **${product.price}** [here]({product.image_url}).", False
+        elif 'other' in message or 'different' in message:
+            return "Sure, what else are you looking for?", True
+        else:
+            return "I can help you with the price, description, or image of the product. How can I assist you further?", False
+
+    @staticmethod
+    def format_product_response(product):
+        response = (
+            f"**{product['name']}**\n"
+            f"Category: {product['category_name']}\n"
+            f"Description: {product['description']}\n"
+            f"Price: ${product['price']}\n"
+            f"Image: {product['image_url']}\n"
+            f"How can I assist you further with this product?"
+        )
+        return response
+    
+    @staticmethod 
+    def get_all_info_by_id(product_id):
+        product = Product.get(product_id)
+        product = Product.to_dict(product)
+        del product['created_by']
+        if not product:
+            return None
+        reviews = Product.get_reviews(product_id)
+        sellers = Product.get_sellers(product_id)
+        inventory = sum(seller['quantity'] for seller in sellers)
+        return {
+            'product': product,
+            'reviews': reviews,
+            'inventory': inventory,
+            'sellers': sellers
+        }
 
 class Category:
     def __init__(self, category_name):

@@ -14,6 +14,7 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/main.css') }}"
     />
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <link
       href="https://fonts.googleapis.com/css?family=Source+Sans+Pro"
       rel="stylesheet"
@@ -110,6 +111,8 @@
       </div>
     </div>
 
-    <div class="main">{% block content %}{% endblock %}</div>
+    <div class="main">
+      {% block content %} {% endblock %} {% include 'chatbot.html' %}
+    </div>
   </body>
 </html>

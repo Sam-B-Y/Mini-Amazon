@@ -176,3 +176,157 @@ h1 {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+/* Chatbot Toggle Button */
+.chatbot-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #007bff;
+  color: white;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.chatbot-toggle:hover {
+  background-color: #0056b3;
+}
+
+/* Chatbot Window */
+.chatbot-window {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 350px;
+  max-height: 500px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  display: none;
+  flex-direction: column;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+/* Chatbot Header */
+.chatbot-header {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Chatbot Body */
+.chatbot-body {
+  padding: 15px;
+  flex: 1;
+  overflow-y: auto;
+  background-color: #f8f9fa;
+}
+
+/* Chatbot Footer */
+.chatbot-footer {
+  padding: 10px 15px;
+  border-top: 1px solid #ccc;
+  background-color: #ffffff;
+}
+
+/* Chat Messages */
+.chatbot-message {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+/* Bot Messages */
+.chatbot-message.bot {
+  justify-content: flex-start;
+}
+
+/* User Messages */
+.chatbot-message.user {
+  justify-content: flex-end;
+}
+
+/* System Messages */
+.chatbot-message.system {
+  justify-content: left;
+}
+
+/* Message Content */
+.message-content {
+  max-width: 80%;
+  padding: 8px 12px;
+  border-radius: 15px;
+  position: relative;
+  word-wrap: break-word;
+}
+
+/* Bot Message Styling */
+.chatbot-message.bot .message-content {
+  background-color: #e9ecef;
+  color: #000;
+  text-align: left;
+}
+
+/* User Message Styling */
+.chatbot-message.user .message-content {
+  background-color: #007bff;
+  color: white;
+  text-align: left; /* Keeps text readable */
+}
+
+/* System Message Styling */
+.chatbot-message.system .message-content {
+  background-color: #f1f1f1;
+  color: #333;
+  text-align: left;
+  font-style: italic;
+  border: 1px solid #ccc;
+}
+
+/* Timestamp Styling */
+.message-timestamp {
+  font-size: 0.8em;
+  color: #6c757d;
+  margin-top: 2px;
+  text-align: left;
+}
+
+/* Optional: Add a slight margin to the timestamp */
+.chatbot-message .message-timestamp {
+  margin-left: 5px;
+}
+
+/* Scrollbar Styling */
+.chatbot-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chatbot-body::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.chatbot-body::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Chatbot Header Buttons */
+.chatbot-header button {
+  border: none;
+  background: none;
+  color: white;
+}
+
+.chatbot-header button:hover {
+  color: #dcdcdc;
+}

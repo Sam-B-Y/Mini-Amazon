@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, session
 from flask_login import LoginManager
 from .config import Config
 from .db import DB
@@ -12,8 +12,12 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    app.secret_key = '!@#($rcheriq34c1!@$fasjdc)'  # should be hidden but for the sake of this project, it's here
+    app.config['SESSION_TYPE'] = 'filesystem' 
+
     app.db = DB(app)
     login.init_app(app)
+    
 
     from .index import bp as index_bp
     app.register_blueprint(index_bp)
@@ -38,5 +42,8 @@ def create_app():
 
     from .orders import bp as orders_bp
     app.register_blueprint(orders_bp, url_prefix='/orders') 
+
+    from .chatbot import bp as chatbot_bp
+    app.register_blueprint(chatbot_bp)
 
     return app

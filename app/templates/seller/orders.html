@@ -15,9 +15,8 @@
       >
         <option value="All">All</option>
         <option value="Pending">Pending</option>
-        <option value="Shipped">Shipped</option>
         <option value="Complete">Complete</option>
-        <option value="Cancelled">Cancelled</option>
+        <option value="Ordered">Ordered</option>
       </select>
     </div>
 
@@ -140,7 +139,7 @@
         return "bg-primary text-white";
       case "Complete":
         return "bg-success text-white";
-      case "Cancelled":
+      case "Ordered":
         return "bg-danger text-white";
       default:
         return "bg-secondary text-white";
