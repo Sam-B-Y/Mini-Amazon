@@ -1,16 +1,33 @@
-
 {% extends "base.html" %}
 
 {% block content %}
 <div class="container mt-4">
     <h2>Search Results for "{{ query }}"</h2>
+
+    <input type="hidden" id="range_min" value="{{ range_min }}">
+    <input type="hidden" id="range_max" value="{{ range_max }}">
     
     <form method="GET" action="{{ url_for('search.search') }}" class="mb-4">
+
+
+
+        <input type="hidden" id="query2" name="query2" value="{{ query }}">
+
         <div class="row">
-            
-            <!-- Category Filter -->
             <div class="col-md-2">
-                <select name="category" class="form-control">
+                <h5>Category:</h5>
+            </div>
+            <div class="col-md-2">
+                <h5>Minimum Review Score:</h5>
+            </div>
+            <div class="col-md-4">
+                <h5>Price Range:</h5>
+            </div>  
+        </div>
+
+        <div class="row">
+            <div class="col-md-2">
+                <select name="category" class="form-control" id="category">
                     <option value="">All Categories</option>
                     {% for cat in categories %}
                         <option value="{{ cat }}" {% if cat == category %}selected{% endif %}>{{ cat }}</option>
@@ -18,27 +35,55 @@
                 </select>
             </div>
             
-            <!-- Minimum Review Score -->
             <div class="col-md-2">
-                <input type="number" step="0.1" min="0" max="5" name="min_review" class="form-control" placeholder="Min Review" value="{{ min_review }}">
+                <input type="number" step="0.1" min="0" max="5" name="min_review" id="min_review" class="form-control" placeholder="Min Review" value="{{ min_review }}">
             </div>
             
-            <!-- Price Range -->
-            <div class="col-md-2">
-                <input type="number" step="0.01" min="0" name="price_min" class="form-control" placeholder="Min Price" value="{{ price_min }}">
+            <div class="col-md-4">
+                <label for="price-range">Price Range:</label>
+                <input type="text" id="price-range" readonly style="border:0; font-weight:bold; margin-bottom: 10px;">
+                <div id="slider-range"></div>
+                <input type="hidden" id="price_min" name="price_min" value="{{ price_min }}">
+                <input type="hidden" id="price_max" name="price_max" value="{{ price_max }}">
             </div>
-            <div class="col-md-2">
-                <input type="number" step="0.01" min="0" name="price_max" class="form-control" placeholder="Max Price" value="{{ price_max if price_max is not none else '' }}">
-            </div>
-            
-            <!-- Submit Button -->
+
             <div class="col-md-1">
                 <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+
+            <div class="col-md-1">
+                <a class="btn btn-secondary w-100" onclick="clearFilter()">Reset</a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-2">
+                <h5>Sort by:</h5>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-2">
+                <select name="sort_by" class="form-control">
+                    <option value="relevance" {% if sort_by == "relevance" %}selected{% endif %}>Relevance</option>
+                    <option value="price" {% if sort_by == "price" %}selected{% endif %}>Price</option>
+                    <option value="rating" {% if sort_by == "rating" %}selected{% endif %}>Average Rating</option>
+                    <option value="review_count" {% if sort_by == "review_count" %}selected{% endif %}>Review Count</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="sort_order" class="form-control">
+                    <option value="desc" {% if sort_order == "desc" %}selected{% endif %}>Descending</option>
+                    <option value="asc" {% if sort_order == "asc" %}selected{% endif %}>Ascending</option>
+                </select>
+            </div>
+
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100">Sort</button>
             </div>
         </div>
     </form>
     
-    <!-- Products Section -->
     {% if products %}
         <div class="row" id="products-container">
             {% for product in products %}
@@ -76,4 +121,75 @@
         </div>
     {% endif %}
 </div>
+
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+<script>
+    $(function() {
+        $("#slider-range").slider({
+            range: true,
+            min: 0,
+            max: 500, 
+            values: [0, 500],
+            slide: function(event, ui) {
+                $("#price-range").val("$" + ui.values[0] + " - $" + ui.values[1]);
+                $("#price_min").val(ui.values[0]);
+                $("#price_max").val(ui.values[1]);
+            }
+        });
+
+        $("#price-range").val("$" + $("#slider-range").slider("values", 0) +
+            " - $" + $("#slider-range").slider("values", 1));
+
+        
+    });
+
+
+    $(function() {
+        var rangeMin = parseFloat($("#range_min").val());
+        var rangeMax = parseFloat($("#range_max").val());
+
+        rangeMin = Math.floor(rangeMin);
+        rangeMax = Math.ceil(rangeMax);
+
+
+
+        var priceMin = parseFloat($("#price_min").val());
+        var priceMax = parseFloat($("#price_max").val());
+        
+        if (!priceMin) {
+            priceMin = rangeMin;
+        }
+        if (!priceMax) {
+            priceMax = rangeMax;
+        }
+
+        $("#slider-range").slider("option", "min", rangeMin);
+        $("#slider-range").slider("option", "max", rangeMax);
+        $("#slider-range").slider("option", "values", [priceMin, priceMax]);
+
+        $("#price-range").val("$" + priceMin + " - $" + priceMax);
+    });
+
+    // $("#query").on("input", function() {
+    //     $("#query2").val($("#query").val());
+    // });
+
+    function clearFilter() {
+        $("#category").val("");
+        $("#min_review").val(0);
+        
+        var rangeMin = parseFloat($("#range_min").val());
+        var rangeMax = parseFloat($("#range_max").val());
+
+        $("#slider-range").slider("option", "values", [rangeMin, rangeMax]);
+
+        $("#price-range").val("$" + rangeMin + " - $" + rangeMax);
+
+        $("#price_min").val(rangeMin);
+        $("#price_max").val(rangeMax);
+    }
+</script>
 {% endblock %}
