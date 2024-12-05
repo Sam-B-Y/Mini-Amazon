@@ -190,7 +190,7 @@ FROM Products
         del product['created_by']
         if not product:
             return None
-        reviews = Product.get_reviews(product_id)
+        reviews = Product.get_reviews(product_id)[:5]
         sellers = Product.get_sellers(product_id)
         inventory = sum(seller['quantity'] for seller in sellers)
         return {

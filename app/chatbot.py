@@ -7,9 +7,12 @@ from .models.product import Product
 
 bp = Blueprint('chatbot', __name__)
 
+# get api_key from env
+import os
+api = os.getenv('OPENAI_API_KEY')
+
 client = OpenAI(
-    api_key = "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"  # exposing just so you can use it without setting env, but not to do in production (use env vars)
-    # don't abuse this key, it has limited usage
+    api_key=api
 )
 
 def generate_gpt_response(messages):
@@ -40,6 +43,7 @@ FOLLOWUP_SYSTEM_PROMPT = (
     "You are assisting the user with follow-up questions about a specific product they have inquired about. "
     "Provide detailed and accurate information based on the available product data. If the user asks for details such as the seller, reviews, description, price, or any other product-related information, respond accordingly. "
     "Maintain the context of the conversation and ensure that your responses are clear and helpful. "
+    "At NO point should you invent information about a product."
     "If you are unsure about the user's request, ask for clarification."
     "EXAMPLES:\n"
     "- *User*: Who is selling this product?\n"
@@ -56,8 +60,8 @@ SYSTEM_PROMPT = (
     "You are a highly intelligent and interactive chatbot for an online shopping website. "
     "Your primary goal is to assist users in finding products and navigating various sections of the website. \n"
     "You have 3 reply options: 'LOOKUP: (keywords)', 'INFO', and a general response.\n"
-    "If the last message is from the system, you should reply with a general response.\n\n"
     "You can detect when a user intends to search for a product, in which case your reply with 'LOOKUP: (keywords)', where keywords is a string of words that the user is looking for.\n\n"
+    "At NO point should you invent information about a product. Always reply with 'LOOKUP: (keywords)' to get the most relevant product.\n\n"
     "You can aslo detect when a user intends to ask a follow up about the product, in which case you should reply with just 'INFO', even if you don't know what product they're referring to. Follow ups include questions about who is selling the product, its reviews, description, price....\n\n"
     "The product can be vague, such as 'car seat' or 'laptop', or more specific. However, if the query is blatantly irrelevant, such as 'Look up a akjsdhfjkashdf', you should respond with a message asking for clarification.\n\n"
     "If the message is clearly irrelevant to an online shopping context, respond with instructions of what you can do.\n\n"
@@ -134,36 +138,28 @@ def chatbot():
         products = Product.best_search_by_keyword(lookup)
         if products:
             top_product = products
-            info = Product.get_all_info_by_id(top_product['product_id'])
-
-            # Store each item separately in session
-            session['selected_product_id'] = top_product['product_id']
-            session['selected_category_name'] = info.get('category_name')
-            session['selected_name'] = info.get('name')
-            session['selected_description'] = info.get('description')
-            session['selected_price'] = info.get('price')
-            session['selected_image_url'] = info.get('image_url')
-            session['selected_reviews'] = info.get('reviews', [])
-            session['selected_inventory'] = info.get('inventory')
-            session['selected_sellers'] = info.get('sellers', [])
 
             message = f"Here is what I found for {lookup}:"
 
             product_display = (
-                f"**{top_product['name']}**\n"
-                f"Category: {top_product['category_name']}\n"
-                f"Price: ${top_product['price']}\n"
-                f"Image: {top_product['image_url']}\n"
-                f"Average Review Score: {top_product['avg_review_score']} ({top_product['review_count']} reviews)\n"
-                f"How can I assist you further with this product?"
+                f"<div style='border: 1px solid #ddd; padding: 10px; margin: 10px 0;'>"
+                f"<h5>{top_product['name']}</h5>"
+                f"<p><strong>Category:</strong> {top_product['category_name']}</p>"
+                f"<p><strong>Price:</strong> ${top_product['price']}</p>"
+                f"<p><img src='{top_product['image_url']}' alt='{top_product['name']}' style='max-width: 100%; height: auto;'></p>"
             )
 
-            message += "\n\n" + product_display
+            if top_product['review_count'] > 0:
+                product_display += f"<p><strong>Review Score:</strong> {str(round(float(top_product['avg_review_score']), 2))} ({top_product['review_count']})</p>"
+            
+            product_display +=  (f"<p><a href='/products/{top_product['product_id']}' style='color: #007bff; text-decoration: none;'>View Product</a></p>"
+                f"<p>How can I assist you further with this product?</p>"
+                f"</div>")
 
-            message += f"<a href='/products/{top_product['product_id']}'>View Product</a>"
-
+            message += "\n" + product_display
             assistant_response = message
             session['conversation'].append({"role": "assistant", "content": assistant_response})
+            session['selected_product_id'] = top_product['product_id']
             session.modified = True
             return jsonify({'response': assistant_response})
         else:
@@ -180,17 +176,24 @@ def chatbot():
             return jsonify({'response': assistant_response})
         content = FOLLOWUP_SYSTEM_PROMPT + "Product info:\n"
 
+        top_product = Product.get(session['selected_product_id'])
+
+        top_product = Product.to_dict(top_product)
+
+
+        info = Product.get_all_info_by_id(top_product['product_id'])
+
         # Retrieve individual product info from session
         product_info = {
-            "product_id": session.get('selected_product_id'),
-            "category_name": session.get('selected_category_name'),
-            "name": session.get('selected_name'),
-            "description": session.get('selected_description'),
-            "price": session.get('selected_price'),
-            "image_url": session.get('selected_image_url'),
-            "reviews": session.get('selected_reviews', []),
-            "inventory": session.get('selected_inventory'),
-            "sellers": session.get('selected_sellers', [])
+            "product_id": top_product['product_id'],
+            "category_name": info.get('category_name'),
+            "name": info.get('name'),
+            "description": info.get('description'),
+            "price": info.get('price'),
+            "image_url": info.get('image_url'),
+            "reviews": info.get('reviews', []),
+            "inventory": info.get('inventory'),
+            "sellers": info.get('sellers', [])
         }
 
         product_info_str = ""
@@ -220,14 +223,6 @@ def chatbot():
 @bp.route('/reset_chatbot_session', methods=['POST'])
 def reset_chatbot_session():
     session.pop('selected_product_id', None)
-    session.pop('selected_category_name', None)
-    session.pop('selected_name', None)
-    session.pop('selected_description', None)
-    session.pop('selected_price', None)
-    session.pop('selected_image_url', None)
-    session.pop('selected_reviews', None)
-    session.pop('selected_inventory', None)
-    session.pop('selected_sellers', None)
     session.pop('conversation', None)
     logging.debug("Chatbot session has been reset.")
     return jsonify({'status': 'Chatbot session reset.'}), 200
