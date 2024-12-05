@@ -31,6 +31,7 @@
             <p class="text-muted">{{ purchase.description|truncate(255) }}</p>
             <p>Category: {{ purchase.category_name }}</p>
             <p>Quantity: {{ purchase.quantity }}</p>
+            <p>Status: {{ purchase.status }}</p>
           </div>
           <div class="col-md-2 text-end">
             <a href="/user/{{ purchase.seller_id }}" class="btn btn-link"

@@ -79,6 +79,7 @@ FROM Products
         ''', k=k)
         return [Product(*row) for row in rows]
 
+    @staticmethod
     def to_dict(self):
         return {
             'product_id': self.product_id,
@@ -89,6 +90,61 @@ FROM Products
             'price': self.price,
             'created_by': self.created_by
         }
+    
+    @staticmethod
+    def search_by_keyword(keywords):
+        words = keywords.split()
+        params = {}
+        relevance_exprs = []
+        where_clauses = []
+
+        for idx, word in enumerate(words):
+            param = f'word{idx}'
+            word_pattern = f'%{word.lower()}%'
+            params[param] = word_pattern
+
+            relevance_exprs.append(f"""
+                (CASE WHEN LOWER(p.name) LIKE :{param} THEN 1 ELSE 0 END) +
+                (CASE WHEN LOWER(p.category_name) LIKE :{param} THEN 1 ELSE 0 END) +
+                (CASE WHEN LOWER(p.description) LIKE :{param} THEN 1 ELSE 0 END)
+            """)
+            
+            where_clauses.append(f"""
+                LOWER(p.name) LIKE :{param} OR
+                LOWER(p.category_name) LIKE :{param} OR
+                LOWER(p.description) LIKE :{param}
+            """)
+
+        relevance_expr = ' + '.join(relevance_exprs)
+        where_clause = ' OR '.join(where_clauses)
+
+        query = f'''
+        SELECT p.product_id, p.category_name, p.name, p.description, p.image_url, p.price, p.created_by,
+        ({relevance_expr}) AS relevance,
+        COALESCE(AVG(r.rating), 0) AS avg_review_score,
+        COUNT(r.review_id) AS review_count
+        FROM Products p
+        LEFT JOIN Reviews r ON p.product_id = r.product_id
+        WHERE {where_clause}
+        GROUP BY p.product_id, p.category_name, p.name, p.description, p.image_url, p.price, p.created_by
+        ORDER BY relevance DESC, p.product_id
+        '''
+        rows = app.db.execute(query, **params)
+        return [{
+            'product_id': row[0],
+            'category_name': row[1],
+            'name': row[2],
+            'description': row[3],
+            'image_url': row[4],
+            'price': row[5],
+            'created_by': row[6],
+            'relevance': row[7],
+            'avg_review_score': row[8],
+            'review_count': row[9]
+        } for row in rows]
+
+    
+# move to standalone file
 
 class Category:
     def __init__(self, category_name):

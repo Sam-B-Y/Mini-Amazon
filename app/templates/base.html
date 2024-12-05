@@ -50,6 +50,7 @@
             aria-label="Search"
             name="query"
             style="flex-grow: 1"
+            value="{{ query if query is defined else '' }}"
           />
           <div class="input-group-append">
             <button class="btn btn-secondary" type="submit">
