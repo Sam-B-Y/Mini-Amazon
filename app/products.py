@@ -1,6 +1,7 @@
-from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for
+from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for, session
 from .models.product import Product, Category
 from .models.inventory import Inventory
+
 
 bp = Blueprint('products', __name__)
 
@@ -44,6 +45,50 @@ def get_products():
         'page': page,
         'pages': (len(products) + per_page - 1) // per_page
     })
+
+@bp.route('/products/search_existing', methods=['GET'])
+def search_existing_product():
+    keywords = request.args.get('q', '').strip()  # Get the search query
+    if not keywords:
+        return jsonify({'error': 'No keywords provided.'}), 400
+
+    # Use the new search_and_return_existing method
+    products = Product.search_and_return_existing(keywords)
+    if not products:
+        return jsonify({'products': [], 'message': 'No matching products found.'})
+    
+    return jsonify({'products': products})
+
+
+@bp.route('/products/create_listing', methods=['POST'])
+def create_listing():
+    """
+    Create a listing for an existing product.
+    """
+    user_id = request.cookies.get('id')    # Automatically fetch user_id from session
+
+    # Validate that the user is logged in
+    if not user_id:
+        return jsonify({'error': 'User not authenticated. Please log in.'}), 401
+
+    data = request.get_json()
+
+    product_id = data.get('product_id')
+    quantity = data.get('quantity')
+
+    # Validate required fields
+    if not product_id or not quantity:
+        return jsonify({'error': 'Product ID and quantity are required.'}), 400
+
+    # Use the Inventory model to create a listing
+    success = Inventory.create_listing(user_id, product_id, quantity)
+
+    if success:
+        return jsonify({'message': 'Listing created successfully!'}), 201
+    else:
+        return jsonify({'error': 'Failed to create listing.'}), 500
+
+
 
 @bp.route('/products/<int:product_id>', methods=['GET'])
 def get_product(product_id):

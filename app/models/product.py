@@ -61,6 +61,25 @@ WHERE i.product_id = :product_id AND u.is_seller = TRUE
         rows = app.db.execute(query, **params)
         return [Product(*row) for row in rows]
 
+    def to_dict_search(self):
+        return {
+            'product_id': self.product_id,
+            'category_name': self.category_name,
+            'name': self.name,
+            'description': self.description,
+            'image_url': self.image_url,
+            'price': float(self.price),
+            'created_by': self.created_by
+        }
+
+    @staticmethod
+    def search_and_return_existing(keywords):
+        """Search for products based on keywords and return their details."""
+        products = Product.search(keywords=keywords)
+        return [p.to_dict_search() for p in products]  # Convert Product objects to dictionaries
+
+    
+
     @staticmethod
     def get_all():
         rows = app.db.execute('''
