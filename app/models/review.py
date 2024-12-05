@@ -26,7 +26,7 @@ WHERE product_id = :product_id AND seller_id = :seller_id
 SELECT *
 FROM Reviews
 WHERE user_id = :user_id
-ORDER BY added_at DESC limit 5
+ORDER BY added_at DESC 
 ''', user_id=user_id)
         return [Review(*row) for row in rows]
 
@@ -45,11 +45,11 @@ ORDER BY added_at DESC limit 5
         existing_review = app.db.execute('''
 SELECT *
 FROM reviews
-WHERE user_id = :user_id AND seller_id = :seller_id
-''', user_id=user_id, seller_id=seller_id)
+WHERE user_id = :user_id AND seller_id = :seller_id AND product_id = :product_id
+''', user_id=user_id, seller_id=seller_id, product_id=product_id)
 
         if existing_review:
-            raise Exception("User has already submitted a review for this seller.")
+            raise Exception("User has already submitted a review for this product.")
 
         app.db.execute('''
 INSERT INTO reviews (user_id, product_id, seller_id, rating, comment, added_at)
@@ -60,7 +60,7 @@ VALUES (:user_id, :product_id, :seller_id, :rating, :comment, CURRENT_TIMESTAMP)
     def edit_review(review_id, rating, comment):
         app.db.execute('''
 UPDATE reviews
-SET rating = :rating, comment = :comment
+SET rating = :rating, comment = :comment, added_at = CURRENT_TIMESTAMP
 WHERE review_id = :review_id
 ''', review_id=review_id, rating=rating, comment=comment)
 

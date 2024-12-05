@@ -59,20 +59,14 @@ Sold by: <a href="/user/{{ inventory.seller_id }}">{{ inventory.seller_name }}</
             <div class="star-rating centered-stars">
               {% for i in range(1, 6) %} {% if review.rating >= i %}
               <i class="fa fa-star filled"></i>
-              {% elif review.rating > i - 1 %}
-              <i
-                class="fa fa-star filled fractional"
-                style="--fraction-width: {{ (review.rating - (i - 1)) * 100 }}%;"
-              ></i>
               {% else %}
               <i class="fa fa-star empty"></i>
               {% endif %} {% endfor %}
             </div>
+            <span class="ms-2">{{ review.reviewer_name }}</span>
           </div>
           <p class="mb-1">{{ review.comment }}</p>
-          <small class="text-muted"
-            >Added at: {{ review.added_at }} by {{ review.full_name }}</small
-          >
+          <small class="text-muted">Added at: {{ review.added_at }}</small>
         </div>
       </div>
       {% endfor %} {% else %}
