@@ -1,7 +1,4 @@
 from flask import current_app as app
-from flask import session
-import re
-import logging
 
 class Product:
     def __init__(self, product_id, category_name, name, description, image_url, price, created_by):
