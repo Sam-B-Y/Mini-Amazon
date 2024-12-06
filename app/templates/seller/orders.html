@@ -34,100 +34,141 @@
   <div id="ordersContainer" class="row g-4"></div>
 </div>
 
+<!-- Modal for Line Orders -->
+<div class="modal fade" id="lineOrderModal" tabindex="-1" aria-labelledby="lineOrderModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="lineOrderModalLabel">Order Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="lineOrderContent">
+          <!-- Content will be dynamically injected here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript -->
 <script>
-  async function loadOrders() {
-    try {
-      const statusFilter = document.getElementById("orderStatusFilter").value;
-      const searchQuery = document
-        .getElementById("orderSearchInput")
-        .value.trim();
-      const ordersContainer = document.getElementById("ordersContainer");
+async function loadOrders() {
+  try {
+    const statusFilter = document.getElementById("orderStatusFilter").value;
+    const searchQuery = document.getElementById("orderSearchInput").value.trim();
+    const ordersContainer = document.getElementById("ordersContainer");
 
-      ordersContainer.innerHTML = "";
+    ordersContainer.innerHTML = "";
 
-      // Construct API URL with search and status filters
-      const response = await fetch(
-        `/orders/api/seller_orders?status=${encodeURIComponent(
-          statusFilter
-        )}&search=${encodeURIComponent(searchQuery)}`
-      );
-      const data = await response.json();
+    const response = await fetch(`/orders/api/seller_orders?status=${encodeURIComponent(statusFilter)}&search=${encodeURIComponent(searchQuery)}`);
+    const data = await response.json();
 
-      if (data.error) {
-        console.error(data.error);
-        ordersContainer.innerHTML =
-          '<p class="text-danger text-center">Failed to load orders.</p>';
-        return;
-      }
-
-      if (data.orders.length === 0) {
-        ordersContainer.innerHTML =
-          '<p class="text-muted text-center">No orders found.</p>';
-        return;
-      }
-
-      data.orders.forEach((order) => {
-        const badgeClass = getBadgeClass(order.order_status);
-        const isComplete = order.order_status === "Complete";
-
-        const card = document.createElement("div");
-        card.className = "col-lg-4 col-md-6 col-sm-12";
-        card.innerHTML = `
-          <div class="card shadow-sm border-0">
-            <div class="card-header d-flex justify-content-between align-items-center bg-light">
-              <span class="fw-bold">Order ID: ${order.order_id}</span>
-              <span class="badge ${badgeClass}">${order.order_status}</span>
-            </div>
-            <div class="card-body">
-              <p><strong>Buyer:</strong> ${order.buyer_name}</p>
-              <p><strong>Address:</strong> ${order.buyer_address}</p>
-              <p><strong>Date:</strong> ${new Date(
-                order.ordered_time
-              ).toLocaleDateString()}</p>
-              <p><strong>Quantity:</strong> ${order.quantity}</p>
-              <p><strong>Total:</strong> $${(
-                order.quantity * order.unit_price
-              ).toFixed(2)}</p>
-              ${
-                isComplete
-                  ? `<p class="text-success">Order is already completed.</p>`
-                  : `<button class="btn btn-success w-100" onclick="markAsComplete(${order.order_id})">
-                     Mark as Complete
-                   </button>`
-              }
-            </div>
-          </div>
-        `;
-        ordersContainer.appendChild(card);
-      });
-    } catch (error) {
-      console.error("Error loading orders:", error);
+    if (data.error) {
+      console.error(data.error);
+      ordersContainer.innerHTML = '<p class="text-danger text-center">Failed to load orders.</p>';
+      return;
     }
+
+    if (data.orders.length === 0) {
+      ordersContainer.innerHTML = '<p class="text-muted text-center">No orders found.</p>';
+      return;
+    }
+
+    data.orders.forEach((order) => {
+      const badgeClass = getBadgeClass(order.order_status);
+      const isComplete = order.completion_status; // True if all order_items are complete
+
+      const card = document.createElement("div");
+      card.className = "col-lg-4 col-md-6 col-sm-12";
+      card.innerHTML = `
+        <div class="card shadow-sm border-0 ${isComplete ? 'bg-success-subtle' : ''}" onclick="showLineOrders(${order.order_id})" style="cursor: pointer;">
+          <div class="card-header d-flex justify-content-between align-items-center bg-light">
+            <span class="fw-bold">Order ID: ${order.order_id}</span>
+          </div>
+          <div class="card-body">
+            <p><strong>Buyer:</strong> ${order.buyer_name}</p>
+            <p><strong>Address:</strong> ${order.buyer_address}</p>
+            <p><strong>Date:</strong> ${new Date(order.ordered_time).toLocaleDateString()}</p>
+            <p><strong>Quantity:</strong> ${order.quantity}</p>
+            <p><strong>Total:</strong> $${(order.quantity * order.unit_price).toFixed(2)}</p>
+            ${isComplete 
+              ? '<p class="text-success">All items are complete!</p>' 
+              : '<p class="text-danger">Order Items Pending.</p>'}
+
+          </div>
+        </div>
+      `;
+      ordersContainer.appendChild(card);
+    });
+  } catch (error) {
+    console.error("Error loading orders:", error);
   }
+}
 
-  async function markAsComplete(orderId) {
+
+  async function showLineOrders(orderId) {
     try {
-      const response = await fetch(`/orders/api/mark_complete`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ order_id: orderId }),
-      });
-
+      console.log(`Fetching line orders for Order ID: ${orderId}`);
+      const response = await fetch(`/orders/api/line_orders?order_id=${orderId}`);
       const data = await response.json();
 
       if (data.error) {
         console.error(data.error);
-        alert("Failed to mark order as complete.");
+        alert("Failed to load line orders.");
         return;
       }
 
-      alert("Order marked as complete!");
-      loadOrders(); // Reload the orders list
+      const modalContent = document.getElementById("lineOrderContent");
+      if (!modalContent) {
+        console.error("Modal content container (lineOrderContent) not found!");
+        return;
+      }
+
+      if (data.line_orders.length === 0) {
+        modalContent.innerHTML = "<p class='text-muted'>No line items found for this order.</p>";
+      } else {
+        modalContent.innerHTML = `
+          <h5>Order ID: ${orderId}</h5>
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Product ID</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.line_orders.map(order => `
+                <tr>
+                  <td>${order.product_id}</td>
+                  <td>${order.quantity}</td>
+                  <td>$${Number(order.unit_price).toFixed(2)}</td>
+                  <td>${order.status}</td>
+                  <td>
+                    ${order.status === "Complete" ? 
+                      '<span class="text-success">Completed</span>' : 
+                      order.status === "Pending" ?
+                        `<button class="btn btn-success btn-sm" onclick="updateLineItemStatus(${orderId}, ${order.product_id}, 'Complete')">Mark as Complete</button>` :
+                        `<button class="btn btn-warning btn-sm" onclick="updateLineItemStatus(${orderId}, ${order.product_id}, 'Pending')">Mark as Pending</button>`
+                    }
+                  </td>
+
+
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+
+      const modal = new bootstrap.Modal(document.getElementById("lineOrderModal"));
+      modal.show();
     } catch (error) {
-      console.error("Error marking order as complete:", error);
-      alert("An unexpected error occurred.");
+      console.error("Error loading line orders:", error);
+      alert("An unexpected error occurred while fetching line orders.");
     }
   }
 
@@ -135,8 +176,6 @@
     switch (status) {
       case "Pending":
         return "bg-warning text-dark";
-      case "Shipped":
-        return "bg-primary text-white";
       case "Complete":
         return "bg-success text-white";
       case "Ordered":
@@ -146,14 +185,64 @@
     }
   }
 
-  document
-  .getElementById("orderSearchInput")
-  .addEventListener("keypress", function (event) {
+  document.getElementById("orderSearchInput").addEventListener("keypress", function (event) {
     if (event.key === "Enter") {
-      event.preventDefault(); // Prevent form submission if inside a form
-      loadOrders(); // Call the search function
+      event.preventDefault();
+      loadOrders();
     }
   });
+
+  async function markLineItemAsComplete(orderId, productId) {
+  try {
+    const response = await fetch(`/orders/api/mark_complete`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ order_id: orderId, product_id: productId }),
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+      console.error(data.error);
+      alert("Failed to mark item as complete.");
+      return;
+    }
+
+    alert("Item marked as complete!");
+    showLineOrders(orderId); // Refresh the modal
+    loadOrders(); // Refresh the main order list
+  } catch (error) {
+    console.error("Error marking item as complete:", error);
+  }
+}
+async function updateLineItemStatus(orderId, productId, newStatus) {
+  try {
+    const response = await fetch(`/orders/api/update_line_item_status`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ order_id: orderId, product_id: productId, status: newStatus }),
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+      console.error(data.error);
+      alert("Failed to update item status.");
+      return;
+    }
+
+    alert(`Item status updated to ${newStatus}!`);
+    showLineOrders(orderId); // Refresh the modal
+    loadOrders(); // Refresh the main order list
+  } catch (error) {
+    console.error("Error updating item status:", error);
+  }
+}
+
 
   // Load orders when the page loads
   loadOrders();

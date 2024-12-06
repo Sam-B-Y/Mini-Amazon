@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request, make_response
 from werkzeug.urls import url_parse
 from flask import jsonify
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user, current_user, login_required
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
@@ -85,12 +85,15 @@ def register():
 @bp.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('index.index'))
+    redirect_response = make_response(redirect(url_for('index.index')))
+    redirect_response.set_cookie("id", "", expires=0)
+    return redirect_response
 
 
 @bp.route('/add_funds', methods=['POST'])
+@login_required
 def add_funds():
-    id = int(request.cookies.get("id"))
+    id = current_user.id
     user = User.get(id)
     
     if user is None:
@@ -107,8 +110,9 @@ def add_funds():
     return redirect(url_for('users.edit_account'))
 
 @bp.route('/withdraw_funds', methods=['POST'])
+@login_required
 def withdraw_funds():
-    id = int(request.cookies.get("id"))
+    id = current_user.id
     user = User.get(id)
 
     user.balance = float(user.balance)
@@ -131,8 +135,9 @@ def withdraw_funds():
     return redirect(url_for('users.edit_account'))
 
 @bp.route('/edit_account', methods=['GET', 'POST'])
+@login_required
 def edit_account():
-    id = int(request.cookies.get("id"))
+    id = current_user.id
     user = User.get(id)
 
     if user is None:
@@ -169,8 +174,9 @@ def edit_account():
                            email=user.email)
 
 @bp.route('/purchase_history', methods=['GET'])
+@login_required
 def purchase_history():
-    id = int(request.cookies.get("id"))
+    id = current_user.id
     user = User.get(id)
 
     if user is None:
@@ -186,9 +192,25 @@ def purchase_history():
 
     return render_template('account/purchases.html', title="Purchase History", order_history=order_history, page=page, total_pages=total_pages)
 
+@bp.route('/become_seller', methods=['GET'])
+@login_required
+def become_seller():
+    id = current_user.id
+    user = User.get(id)
+
+    if user is None:
+        logout_user()
+        return redirect(url_for('users.login'))
+
+    User.become_seller(id)
+    flash("You are now a seller!", "success")
+    
+    return redirect(url_for('users.view_account'))
+
 @bp.route('/seller_profile', methods=['GET'])
+@login_required
 def seller_profile():
-    id = int(request.cookies.get("id"))
+    id = current_user.id
     user = User.get(id)
 
     if user is None:
@@ -197,15 +219,19 @@ def seller_profile():
 
     is_seller = User.is_seller(id)
     if not is_seller:
+        # alert user that they are not a seller
+        flash("Cannot open page - you are not a seller.", "danger")
         return redirect(url_for('users.view_account'))
     
     stats = User.get_seller_stats(id)
+    print(stats)
 
     return render_template('seller/main.html', title="Seller Profile", seller_stats=stats)
 
 @bp.route('/view_orders', methods=['GET'])
+@login_required
 def view_orders():
-    id = int(request.cookies.get("id"))
+    id = current_user.id
     user = User.get(id)
 
     if user is None:
@@ -219,8 +245,9 @@ def view_orders():
     return render_template('seller/orders.html', title="View Orders")
 
 @bp.route('/view_inventory', methods=['GET'])
+@login_required
 def view_inventory():
-    id = int(request.cookies.get("id"))
+    id = current_user.id
     user = User.get(id)
 
     if user is None:
@@ -234,38 +261,45 @@ def view_inventory():
 
     return render_template('seller/inventory.html', title="View Inventory")
 
+
 @bp.route('/account', methods=['GET'])
+@login_required
 def view_account():
-    id = int(request.cookies.get("id"))
+    id = current_user.id
     user = User.get(id)
 
     if user is None:
         logout_user()
         return redirect(url_for('users.login'))
     
-    return render_template('account/main.html', title="View Account")
+    is_seller = User.is_seller(id)
+    return render_template('account/main.html', title="View Account", is_seller=is_seller)
 
-                        
-@bp.route('/user/<int:id>')
-def view_user(id):
-    user = User.get(id)
+  
+@bp.route('/user/<hashed_email>')
+def view_user(hashed_email):
+    users = User.get_all()
+    found_user = None
     
-    if not user:
+    for user in users:
+        user_hash = sha256(user.email.encode()).hexdigest()
+        if user_hash == hashed_email:
+            found_user = user
+            break
+    
+    if not found_user:
         abort(404)
 
-    is_seller = User.is_seller(id)
-
+    is_seller = User.is_seller(found_user.id)
+        
     if not is_seller:
-        # Existing code for non-seller users
         return render_template('view_user.html', 
-                               full_name=user.full_name,
-                               email=user.email, 
-                               id=user.id)
-    
-    # If the user is a seller, get their reviews
-    ratings = Review.get_seller_reviews(id)
-    
-    # Calculate average rating
+                         full_name=found_user.full_name,
+                         email=found_user.email,
+                         seller_id=found_user.id)
+
+    ratings = Review.get_seller_reviews(found_user.id)
+
     if ratings:
         total_rating = sum(review.rating for review in ratings)
         average_rating = total_rating / len(ratings)
@@ -273,12 +307,9 @@ def view_user(id):
         average_rating = 0
 
     return render_template('view_seller.html', 
-                           full_name=user.full_name,
-                           email=user.email,
-                           seller_id=user.id, 
-                           reviews=ratings,
-                           address=user.address,
-                           average_rating=average_rating)
+                         full_name=found_user.full_name,
+                         email=found_user.email,
+                         seller_id=found_user.id, reviews=ratings, address=found_user.address, average_rating=average_rating)
 
 @bp.route('/api/user/<int:user_id>/email')
 def get_user_email(user_id):
