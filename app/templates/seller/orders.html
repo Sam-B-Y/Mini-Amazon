@@ -61,7 +61,6 @@ async function loadOrders() {
 
     ordersContainer.innerHTML = "";
 
-    // Correct API endpoint
     const response = await fetch(`/orders/api/seller_orders?status=${encodeURIComponent(statusFilter)}&search=${encodeURIComponent(searchQuery)}`);
     const data = await response.json();
 
@@ -80,7 +79,6 @@ async function loadOrders() {
     data.orderItems.forEach((item) => {
       const badgeClass = getBadgeClass(item.status);
 
-      // Safely handle unit_price
       const unitPrice = typeof item.unit_price === "number" ? item.unit_price : parseFloat(item.unit_price) || 0;
 
       const card = document.createElement("div");
@@ -97,9 +95,12 @@ async function loadOrders() {
             <p><strong>Unit Price:</strong> $${unitPrice.toFixed(2)}</p>
             <p><strong>Buyer Name:</strong> ${item.buyer_name}</p>
             <p><strong>Buyer Address:</strong> ${item.buyer_address}</p>
+            ${item.status === "Complete" ? '<p class="text-success fw-bold">This order is completed!</p>' : ''}
+            ${item.status === "Pending" ? '<p class="text-danger fw-bold">This order is still pending.</p>' : ''}
           </div>
         </div>
       `;
+      card.addEventListener("click", () => showLineOrders(item.order_id));
       ordersContainer.appendChild(card);
     });
   } catch (error) {
@@ -107,119 +108,82 @@ async function loadOrders() {
   }
 }
 
-
-
-
-  async function showLineOrders(orderId) {
-    try {
-      console.log(`Fetching line orders for Order ID: ${orderId}`);
-      const response = await fetch(`/orders/api/line_orders?order_id=${orderId}`);
-      const data = await response.json();
-
-      if (data.error) {
-        console.error(data.error);
-        alert("Failed to load line orders.");
-        return;
-      }
-
-      const modalContent = document.getElementById("lineOrderContent");
-      if (!modalContent) {
-        console.error("Modal content container (lineOrderContent) not found!");
-        return;
-      }
-
-      if (data.line_orders.length === 0) {
-        modalContent.innerHTML = "<p class='text-muted'>No line items found for this order.</p>";
-      } else {
-        modalContent.innerHTML = `
-          <h5>Order ID: ${orderId}</h5>
-          <table class="table table-striped">
-            <thead>
-              <tr>
-                <th>Product ID</th>
-                <th>Quantity</th>
-                <th>Unit Price</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.line_orders.map(order => `
-                <tr>
-                  <td>${order.product_id}</td>
-                  <td>${order.quantity}</td>
-                  <td>$${Number(order.unit_price).toFixed(2)}</td>
-                  <td>${order.status}</td>
-                  <td>
-                    ${order.status === "Complete" ? 
-                      '<span class="text-success">Completed</span>' : 
-                      order.status === "Pending" ?
-                        `<button class="btn btn-success btn-sm" onclick="updateLineItemStatus(${orderId}, ${order.product_id}, 'Complete')">Mark as Complete</button>` :
-                        `<button class="btn btn-warning btn-sm" onclick="updateLineItemStatus(${orderId}, ${order.product_id}, 'Pending')">Mark as Pending</button>`
-                    }
-                  </td>
-
-
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        `;
-      }
-
-      const modal = new bootstrap.Modal(document.getElementById("lineOrderModal"));
-      modal.show();
-    } catch (error) {
-      console.error("Error loading line orders:", error);
-      alert("An unexpected error occurred while fetching line orders.");
-    }
-  }
-
-  function getBadgeClass(status) {
-    switch (status) {
-      case "Pending":
-        return "bg-warning text-dark";
-      case "Complete":
-        return "bg-success text-white";
-      case "Ordered":
-        return "bg-danger text-white";
-      default:
-        return "bg-secondary text-white";
-    }
-  }
-
-  document.getElementById("orderSearchInput").addEventListener("keypress", function (event) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      loadOrders();
-    }
-  });
-
-  async function markLineItemAsComplete(orderId, productId) {
+async function showLineOrders(orderId) {
   try {
-    const response = await fetch(`/orders/api/mark_complete`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ order_id: orderId, product_id: productId }),
-    });
-
+    console.log(`Fetching line orders for Order ID: ${orderId}`);
+    const response = await fetch(`/orders/api/line_orders?order_id=${orderId}`);
     const data = await response.json();
 
     if (data.error) {
       console.error(data.error);
-      alert("Failed to mark item as complete.");
+      alert("Failed to load line orders.");
       return;
     }
 
-    alert("Item marked as complete!");
-    showLineOrders(orderId); // Refresh the modal
-    loadOrders(); // Refresh the main order list
+    const modalContent = document.getElementById("lineOrderContent");
+    if (!modalContent) {
+      console.error("Modal content container (lineOrderContent) not found!");
+      return;
+    }
+
+    if (data.line_orders.length === 0) {
+      modalContent.innerHTML = "<p class='text-muted'>No line items found for this order.</p>";
+    } else {
+      modalContent.innerHTML = `
+        <h5>Order ID: ${orderId}</h5>
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Product ID</th>
+              <th>Quantity</th>
+              <th>Unit Price</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.line_orders.map(order => `
+              <tr>
+                <td>${order.product_id}</td>
+                <td>${order.quantity}</td>
+                <td>$${Number(order.unit_price).toFixed(2)}</td>
+                <td>${order.status}</td>
+                <td>
+                  ${order.status === "Complete" ? 
+                    '<span class="text-success">Completed</span>' : 
+                    order.status === "Pending" ?
+                      `<button class="btn btn-success btn-sm" onclick="updateLineItemStatus(${orderId}, ${order.product_id}, 'Complete')">Mark as Complete</button>` :
+                      `<button class="btn btn-warning btn-sm" onclick="updateLineItemStatus(${orderId}, ${order.product_id}, 'Pending')">Mark as Pending</button>`
+                  }
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    const modal = new bootstrap.Modal(document.getElementById("lineOrderModal"));
+    modal.show();
   } catch (error) {
-    console.error("Error marking item as complete:", error);
+    console.error("Error loading line orders:", error);
+    alert("An unexpected error occurred while fetching line orders.");
   }
 }
+
+function getBadgeClass(status) {
+  switch (status) {
+    case "Pending":
+      return "bg-warning text-dark";
+    case "Complete":
+      return "bg-success text-white";
+    case "Ordered":
+      return "bg-danger text-white";
+    default:
+      return "bg-secondary text-white";
+  }
+}
+
 async function updateLineItemStatus(orderId, productId, newStatus) {
   try {
     const response = await fetch(`/orders/api/update_line_item_status`, {
@@ -246,9 +210,8 @@ async function updateLineItemStatus(orderId, productId, newStatus) {
   }
 }
 
-
-  // Load orders when the page loads
-  loadOrders();
+// Load orders when the page loads
+loadOrders();
 </script>
 
 <style>
