@@ -1,46 +1,41 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
+{% block content %}
 <div class="product-detail-container">
   <div class="product-main">
-    <img
-      src="{{ product.image_url }}"
-      alt="{{ product.name }}"
-      class="product-image"
-    />
+    <img src="{{ product.image_url }}" alt="{{ product.name }}" class="product-image" />
     <div class="product-info">
       <h1>{{ product.name }}</h1>
       <p class="price">${{ "%.2f"|format(product.price) }}</p>
       <p class="category">
         Category:
-        <a href="/category/{{product.category_name}}"
-          >{{ product.category_name }}</a
-        >
+        <a href="/category/{{product.category_name}}">{{ product.category_name }}</a>
         <br>
-Sold by: <a href="/user/{{ inventory.seller_id }}">{{ inventory.seller_name }}</a> <br> Available Quantity: {{ inventory.quantity }}
+        Sold by: <a href="/user/{{ inventory.seller_id }}">{{ inventory.seller_name }}</a> <br>
+        Available Quantity: {{ inventory.quantity }}
       </p>
       <p class="rating">
-        <div class="star-rating">
-          {% set average_rating = reviews | map(attribute='rating') | sum / reviews | length if reviews else 0 %}
-          {% for i in range(1, 6) %} {% if average_rating >= i %}
-          <i class="fa fa-star filled"></i>
-          {% elif average_rating > i - 1 %}
-          <i
-            class="fa fa-star filled fractional"
-            style="--fraction-width: {{ (average_rating - (i - 1)) * 100 }}%;"
-          ></i>
-          {% else %}
-          <i class="fa fa-star empty"></i>
-          {% endif %} {% endfor %}
+      <div class="star-rating">
+        {% set average_rating = reviews | map(attribute='rating') | sum / reviews|length if reviews else 0 %}
+        {% for i in range(1, 6) %}
+        {% if average_rating >= i %}
+        <i class="fa fa-star filled"></i>
+        {% elif average_rating > i - 1 %}
+        <i class="fa fa-star filled fractional" style="--fraction-width: {{ (average_rating - (i - 1)) * 100 }}%;"></i>
+        {% else %}
+        <i class="fa fa-star empty"></i>
+        {% endif %}
+        {% endfor %}
         <span style="font-size: medium;">({{ reviews|length if reviews else 0 }} ratings)</span>
-        </div>
+      </div>
       </p>
       <div class="sellers-section">
         <div class="sellers-list">
-              <form class="add-to-cart-form" data-seller-id="{{ inventory.seller_id }}">
-                <input type="number" name="quantity" min="1" max="{{ inventory.quantity }}" value="1" />
-                <button type="submit" class="add-to-cart-btn">
-  <i class="fa fa-shopping-basket"></i> Add to Cart
-</button>
-              </form>
+          <form class="add-to-cart-form" data-seller-id="{{ inventory.seller_id }}">
+            <input type="number" name="quantity" min="1" max="{{ inventory.quantity }}" value="1" />
+            <button type="submit" class="add-to-cart-btn">
+              <i class="fa fa-shopping-basket"></i> Add to Cart
+            </button>
+          </form>
         </div>
       </div>
     </div>
@@ -48,20 +43,34 @@ Sold by: <a href="/user/{{ inventory.seller_id }}">{{ inventory.seller_name }}</
 
   <p class="description">{{ product.description }}</p>
 
-
   <div class="reviews-section">
     <h2>Product Reviews</h2>
+    <!-- Dropdown for filtering reviews by rating -->
+    <label for="filter-rating">Filter by rating:</label>
+    <select id="filter-rating">
+      <option value="">All</option>
+      {% for i in range(1, 6) %}
+      <option value="{{ i }}">{{ i }} star{{ '' if i == 1 else 's' }}</option>
+      {% endfor %}
+    </select>
+
+    <!-- Message displayed when no reviews match the filter -->
+    <p id="no-reviews-message" style="display:none; margin-top:20px; color:#ccc;"></p>
+
     <div class="center-review">
-    {% if reviews %} {% for review in reviews %}
-      <div class="card mb-3">
+      {% if reviews %}
+      {% for review in reviews %}
+      <div class="card mb-3" data-rating="{{ review.rating }}">
         <div class="card-body">
           <div class="d-flex align-items-center mb-2">
             <div class="star-rating centered-stars">
-              {% for i in range(1, 6) %} {% if review.rating >= i %}
+              {% for i in range(1, 6) %}
+              {% if review.rating >= i %}
               <i class="fa fa-star filled"></i>
               {% else %}
               <i class="fa fa-star empty"></i>
-              {% endif %} {% endfor %}
+              {% endif %}
+              {% endfor %}
             </div>
             <span class="ms-2">{{ review.reviewer_name }}</span>
           </div>
@@ -69,13 +78,16 @@ Sold by: <a href="/user/{{ inventory.seller_id }}">{{ inventory.seller_name }}</
           <small class="text-muted">Added at: {{ review.added_at }}</small>
         </div>
       </div>
-      {% endfor %} {% else %}
+      {% endfor %}
+      {% else %}
       <p class="text-muted">No reviews yet.</p>
       {% endif %}
-  </div></div>
+    </div>
+  </div>
 </div>
 
 <script>
+  // Handle adding to cart
   document.querySelectorAll(".add-to-cart-form").forEach((form) => {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -103,6 +115,34 @@ Sold by: <a href="/user/{{ inventory.seller_id }}">{{ inventory.seller_name }}</
         alert("An error occurred. Please try again.");
       }
     });
+  });
+
+  // Handle review filtering
+  const filterSelect = document.getElementById('filter-rating');
+  const reviewCards = document.querySelectorAll('.card.mb-3[data-rating]');
+  const noReviewsMessage = document.getElementById('no-reviews-message');
+
+  filterSelect.addEventListener('change', () => {
+    const selectedRating = filterSelect.value;
+    let visibleCount = 0;
+
+    reviewCards.forEach(card => {
+      const cardRating = card.getAttribute('data-rating');
+      if (!selectedRating || cardRating === selectedRating) {
+        card.style.display = 'block';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    // Display message if no reviews match the selected rating
+    if (selectedRating && visibleCount === 0) {
+      noReviewsMessage.textContent = `No ${selectedRating}-star ratings`;
+      noReviewsMessage.style.display = 'block';
+    } else {
+      noReviewsMessage.style.display = 'none';
+    }
   });
 </script>
 
@@ -180,7 +220,7 @@ Sold by: <a href="/user/{{ inventory.seller_id }}">{{ inventory.seller_name }}</
     font-size: 18px;
   }
 
-   .card {
+  .card {
     border: none;
     background: #1c1c1e;
     color: #fff;
@@ -191,7 +231,6 @@ Sold by: <a href="/user/{{ inventory.seller_id }}">{{ inventory.seller_name }}</
   .card .card-body {
     padding: 1rem;
   }
-  
 
   .center-review {
     display: flex;
@@ -199,6 +238,5 @@ Sold by: <a href="/user/{{ inventory.seller_id }}">{{ inventory.seller_name }}</
     justify-content: center;
     align-items: center;
   }
-
 </style>
 {% endblock %}

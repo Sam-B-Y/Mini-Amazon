@@ -1,8 +1,8 @@
-{% extends "base.html" %} 
+{% extends "base.html" %}
 {% block content %}
 
 <div class="container mt-5 sellerinfo">
-  <div class="text-light">
+  <div class="text-light text-center"> <!-- Ensure the header text is centered -->
     <header class="mb-4">
       <h1>Seller Page of {{ full_name }}</h1>
     </header>
@@ -20,40 +20,54 @@
         <div class="col-md-3 font-weight-bold">Rating:</div>
         <div class="col-md-9">
           <div class="star-rating d-flex align-items-center">
-            {% set average_rating = reviews | map(attribute='rating') | sum /
-            reviews | length if reviews else 0 %} 
-            
-            {% for i in range(1, 6) %} {%
-            if average_rating >= i %}
+            {% set average_rating = reviews | map(attribute='rating') | sum / reviews|length if reviews else 0 %}
+            {% for i in range(1, 6) %}
+            {% if average_rating >= i %}
             <i class="fa fa-star filled"></i>
-            {% elif average_rating > i - 1 %} 
-            <i class="fa fa-star filled fractional" style="--fraction-width: {{ (average_rating - (i - 1)) * 100 }}%;"></i>
+            {% elif average_rating > i - 1 %}
+            <i class="fa fa-star filled fractional"
+              style="--fraction-width: {{ (average_rating - (i - 1)) * 100 }}%;"></i>
             {% else %}
             <i class="fa fa-star empty"></i>
-            {% endif %} {% endfor %} 
+            {% endif %}
+            {% endfor %}
             <span class="ml-2">({{ reviews|length if reviews else 0 }})</span>
           </div>
         </div>
       </div>
     </div>
-    
-    <button class="btn btn-primary mb-3" onclick="openReviewModal('{{ seller_id }}', '{{ full_name }}')">Leave a Review</button>
+
+    <button class="btn btn-primary mb-3" onclick="openReviewModal('{{ seller_id }}', '{{ full_name }}')">Leave a
+      Review</button>
 
     <section class="reviews-section">
       <h2 class="mb-3" style="color: #fff">Seller Reviews</h2>
+
+      <!-- Dropdown for filtering reviews by rating -->
+      <label for="filter-rating" style="color: #fff">Filter by rating:</label>
+      <select id="filter-rating" class="mb-3">
+        <option value="">All</option>
+        {% for i in range(1, 6) %}
+        <option value="{{ i }}">{{ i }} star{{ '' if i == 1 else 's' }}</option>
+        {% endfor %}
+      </select>
+
+      <!-- Message displayed when no reviews match the filter -->
+      <p id="no-reviews-message" style="display:none; margin-top:20px; color:#ccc;"></p>
+
       <div class="center-review">
-        {% if reviews %} 
+        {% if reviews %}
         {% for review in reviews %}
-        <div class="card mb-3">
+        <div class="card mb-3" data-rating="{{ review.rating }}">
           <div class="card-body">
             <div class="d-flex align-items-center mb-2">
               <div class="star-rating centered-stars">
-                {% for i in range(1, 6) %} 
+                {% for i in range(1, 6) %}
                 {% if review.rating >= i %}
                 <i class="fa fa-star filled"></i>
                 {% else %}
                 <i class="fa fa-star empty"></i>
-                {% endif %} 
+                {% endif %}
                 {% endfor %}
               </div>
               <span class="ms-2">{{ review.full_name }}</span>
@@ -62,7 +76,7 @@
             <small class="text-muted">Added at: {{ review.added_at }}</small>
           </div>
         </div>
-        {% endfor %} 
+        {% endfor %}
         {% else %}
         <p class="text-muted">No reviews yet.</p>
         {% endif %}
@@ -70,6 +84,7 @@
     </section>
   </div>
 </div>
+
 
 <!-- Review Modal -->
 <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
@@ -85,7 +100,7 @@
             <label for="rating" class="form-label">Rating (1-5):</label>
             <div id="starRating" class="d-flex">
               {% for i in range(1, 6) %}
-              <i class="fa fa-star" data-value="{{ i }}" onclick="setRating('{{ i }}')"></i>
+              <i class="fa fa-star" data-value="{{ i }}" onclick="setRating({{ i }})"></i>
               {% endfor %}
             </div>
             <input type="hidden" id="reviewRating" name="rating" required>
@@ -101,13 +116,86 @@
   </div>
 </div>
 
-<style>
-  .star-rating {
-    display: flex;
+<script>
+    const filterSelect = document.getElementById('filter-rating');
+      const reviewCards = document.querySelectorAll('.card.mb-3[data-rating]');
+      const noReviewsMessage = document.getElementById('no-reviews-message');
+
+      filterSelect.addEventListener('change', () => {
+        const selectedRating = filterSelect.value;
+        let visibleCount = 0;
+
+        reviewCards.forEach(card => {
+          const cardRating = card.getAttribute('data-rating');
+          if (!selectedRating || cardRating === selectedRating) {
+            card.style.display = 'block';
+            visibleCount++;
+          } else {
+            card.style.display = 'none';
+          }
+        });
+
+        if (selectedRating && visibleCount === 0) {
+          noReviewsMessage.textContent = `No ${selectedRating}-star ratings`;
+          noReviewsMessage.style.display = 'block';
+        } else {
+          noReviewsMessage.style.display = 'none';
+        }
+      });
+  // Open Review Modal
+  function openReviewModal(sellerId, sellerName) {
+    document.querySelectorAll("#starRating .fa-star").forEach((star) => {
+      star.classList.remove("checked");
+    });
+    document.getElementById("reviewRating").value = "";
+    const modal = new bootstrap.Modal(document.getElementById("reviewModal"));
+    document.getElementById("reviewModalLabel").textContent = `Review for ${sellerName}`;
+    modal.show();
   }
 
-  .star-rating .fa-star {
-    font-size: 2rem;
+  // Set rating when stars are clicked
+  function setRating(rating) {
+    document.getElementById("reviewRating").value = rating;
+    document.querySelectorAll("#starRating .fa-star").forEach((star, index) => {
+      star.classList.toggle("checked", index < rating);
+    });
+  }
+
+  // Submit Seller Review
+  async function submitSellerReview(event, sellerId) {
+    event.preventDefault();
+    const rating = document.getElementById("reviewRating").value;
+    const comment = document.getElementById("comment").value;
+    try {
+      const response = await fetch('/api/reviews/seller_review', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ seller_id: sellerId, rating, comment }),
+      });
+      if (response.ok) {
+        alert("Review submitted successfully!");
+        document.getElementById("sellerReviewForm").reset();
+        const modal = bootstrap.Modal.getInstance(document.getElementById('reviewModal'));
+        modal.hide();
+        location.reload(); // Reload page to show the new review
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || "Failed to submit review. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      alert("An unexpected error occurred.");
+    }
+  }
+</script>
+
+<style>
+  .text-light.text-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .card {
@@ -133,62 +221,5 @@
     align-items: center;
   }
 </style>
-
-<script>
-  function openReviewModal(sellerId, sellerName) {
-    document.querySelectorAll("#starRating .fa-star").forEach((star) => {
-      star.classList.remove("checked");
-    });
-    document.getElementById("reviewRating").value = "";
-    const modal = new bootstrap.Modal(document.getElementById("reviewModal"));
-    document.getElementById("reviewModalLabel").textContent = `Review for ${sellerName}`;
-    modal.show();
-  }
-
-  function setRating(rating) {
-    document.getElementById("reviewRating").value = rating;
-    document.querySelectorAll("#starRating .fa-star").forEach((star, index) => {
-      star.classList.toggle("checked", index < rating);
-    });
-  }
-
-  async function submitSellerReview(event, sellerId) {
-    event.preventDefault();
-    const rating = document.getElementById("reviewRating").value;
-    const comment = document.getElementById("comment").value;
-
-    console.log("Submitting review:", { sellerId, rating, comment }); // Log the data being sent
-
-    try {
-      
-      const response = await fetch('/api/reviews/seller_review', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          seller_id: sellerId,
-          rating: rating,
-          comment: comment,
-        }),
-      });
-      console.log(sellerId, rating, comment);
-      const data = await response.json();
-      console.log(data);
-
-      if (data.error) {
-        alert(data.error);
-        return;
-      }
-
-      alert("Review submitted successfully!");
-      document.getElementById("sellerReviewForm").reset();
-      $('#reviewModal').modal('hide'); // Hide the modal after submission
-    } catch (error) {
-      console.error("Error submitting review:", error);
-      alert("An unexpected error occurred.");
-    }
-  }
-</script>
 
 {% endblock %}
