@@ -3,6 +3,7 @@ from flask_login import current_user, login_required
 from flask import Blueprint
 
 from .models.cart import Cart
+from .models.coupon import Coupon
 
 bp = Blueprint('cart', __name__)
 
@@ -10,7 +11,17 @@ bp = Blueprint('cart', __name__)
 @login_required
 def cart():
     cartItems = Cart.get_by_user(current_user.id)
-    return render_template('cart.html', cart_items=cartItems)
+    coupons = Coupon.get_user_available_coupons(current_user.id)
+    cartCoupon = Coupon.get_cart_coupons(current_user.id)
+
+    totalCost = 0
+    for item in cartItems:
+        totalCost += item.price * item.quantity
+    subtotal = totalCost
+    for coupon in cartCoupon:
+        totalCost -= totalCost * coupon.discount / 100
+    
+    return render_template('cart.html', cart_items=cartItems, coupons=coupons, applied_coupons=cartCoupon, subtotal=subtotal, totalCost=totalCost)
 
 @bp.route('/cart/update', methods=['POST'])
 @login_required
@@ -94,5 +105,36 @@ def checkout():
         flash('Checkout successful.', 'success')
     else:
         flash(f'Failed to checkout. Error: {success}.', 'danger')
+
+    return redirect(url_for('cart.cart'))
+
+@bp.route('/cart/apply_coupon', methods=['POST'])
+@login_required
+def apply_coupon():
+    coupon_id = request.form.get('coupon_code')
+
+    print(coupon_id)
+
+    if not coupon_id:
+        return redirect(url_for('cart.cart'))
+
+    message = Coupon.apply_coupon(current_user.id, coupon_id)
+    flash(message, 'success' if 'successfully' in message else 'danger')
+
+    return redirect(url_for('cart.cart'))
+
+@bp.route('/cart/remove_coupon', methods=['POST'])
+@login_required
+def remove_coupon():
+    coupon_id = request.form.get('coupon_id')
+
+    if not coupon_id:
+        return redirect(url_for('cart.cart'))
+
+    success = Coupon.remove_coupon(current_user.id, coupon_id)
+    if success:
+        flash('Coupon removed successfully.', 'success')
+    else:
+        flash('Failed to remove coupon. Please try again.', 'danger')
 
     return redirect(url_for('cart.cart'))
