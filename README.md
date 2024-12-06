@@ -39,4 +39,4 @@ The process of generating all other data can be found in Mini-Amazon/make_data.p
 
 
 FINAL VIDEO SUBMISSION:
-https://tinyurl.com/miniamazoncs316
+https://duke.zoom.us/rec/share/U0YsRluOh_p2QxeOOi_qij8onFHZWsC1YuwFC2quXlDhS5z6cCQsjh3ZkJUZpq5o.J7SHQyXrQa6cU-y2
