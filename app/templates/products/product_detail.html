@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
+<!-- Displays the product details page -->
 <div class="product-detail-container">
   <div class="product-main">
     <img src="{{ product.image_url }}" alt="{{ product.name }}" class="product-image" />
@@ -11,9 +12,11 @@
         <a href="/category/{{product.category_name}}">{{ product.category_name }}</a>
         <br>
         
-Sold by: <button class="btn btn-link" onclick="redirectToSellerPage('{{ inventory.seller_id }}')">
-  {{ inventory.seller_name }}
-</button> <br> Available Quantity: {{ inventory.quantity }}
+Sold by:
+{% for inv in inventory %}<button class="btn btn-link" onclick="redirectToSellerPage('{{ inv.seller_id }}')">{{
+  inv.seller_name }}</button>
+
+{% endfor %}<br> 
       </p>
       <p class="rating">
       <div class="star-rating">
