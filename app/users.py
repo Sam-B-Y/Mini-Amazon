@@ -251,6 +251,7 @@ def view_inventory():
 
     return render_template('seller/inventory.html', title="View Inventory")
 
+
 @bp.route('/account', methods=['GET'])
 def view_account():
     id = int(request.cookies.get("id"))
@@ -260,7 +261,9 @@ def view_account():
         logout_user()
         return redirect(url_for('users.login'))
     
-    return render_template('account/main.html', title="View Account")
+    is_seller = User.is_seller(id)
+    return render_template('account/main.html', title="View Account", is_seller=is_seller)
+
 
 @bp.route('/user/<hashed_email>')
 def view_user(hashed_email):

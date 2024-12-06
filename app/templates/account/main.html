@@ -1,4 +1,5 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
+{% block content %}
 
 <div class="container" style="text-align: center; margin-top: 50px">
   <h2>My Account</h2>
@@ -30,18 +31,21 @@
       style="width: 200px; padding: 25px"
       ><i class="fa fa-star"></i> My Reviews</a
     >
-    <a
-      href="/seller_profile"
-      class="btn btn-primary btn-lg"
-      style="width: 200px; padding: 25px"
-      ><i class="fa fa-user"></i> My Seller Profile</a
-    >
-    <a
-      href="/become_seller"
-      class="btn btn-primary btn-lg"
-      style="width: 200px; padding: 25px"
-      ><i class="fa fa-user"></i> Become a Seller</a
-    >
+    {% if is_seller %}
+      <a
+        href="/seller_profile"
+        class="btn btn-primary btn-lg"
+        style="width: 200px; padding: 25px"
+        ><i class="fa fa-user"></i> My Seller Profile</a
+      >
+    {% else %}
+      <a
+        href="/become_seller"
+        class="btn btn-primary btn-lg"
+        style="width: 200px; padding: 25px"
+        ><i class="fa fa-user"></i> Become a Seller</a
+      >
+    {% endif %}
   </div>
 </div>
 
