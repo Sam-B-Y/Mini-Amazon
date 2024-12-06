@@ -46,7 +46,7 @@ ORDER BY added_at DESC
         existing_review = app.db.execute('''
 SELECT *
 FROM reviews
-WHERE user_id = :user_id AND seller_id = :seller_id AND product_id = :product_id
+WHERE user_id = :user_id AND product_id = :product_id
 ''', user_id=user_id, seller_id=seller_id, product_id=product_id)
 
         if existing_review:
