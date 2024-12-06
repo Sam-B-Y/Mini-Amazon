@@ -70,7 +70,14 @@ AND oi.seller_id = :seller_id;
 
         if not purchases:
             raise Exception("User must have purchased a product from this seller to submit a review.")
-
+        same_seller_review = app.db.execute('''
+SELECT *
+FROM reviews
+WHERE user_id = :user_id AND seller_id = :seller_id AND user_id = seller_id
+''', user_id=user_id, seller_id=seller_id)
+        if same_seller_review:
+            raise Exception("User cannot submit a review for themselves.")
+        
         existing_review = app.db.execute('''
 SELECT *
 FROM reviews
@@ -79,6 +86,7 @@ WHERE user_id = :user_id AND seller_id = :seller_id AND product_id IS NULL
 
         if existing_review:
             raise Exception("User has already submitted a review for this seller.")
+        
 
         app.db.execute('''
 INSERT INTO reviews (user_id, seller_id, rating, comment, added_at)

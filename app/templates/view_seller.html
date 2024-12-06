@@ -2,7 +2,7 @@
 {% block content %}
 
 <div class="container mt-5 sellerinfo">
-  <div class="text-light text-center"> <!-- Ensure the header text is centered -->
+  <div class="text-light text-center">
     <header class="mb-4">
       <h1>Seller Page of {{ full_name }}</h1>
     </header>
@@ -37,13 +37,14 @@
       </div>
     </div>
 
-    <button class="btn btn-primary mb-3" onclick="openReviewModal('{{ seller_id }}', '{{ full_name }}')">Leave a
-      Review</button>
+    <!-- Match the styling of the "Write a Review" button on the purchases page -->
+    <button class="btn btn-primary btn-sm mb-3" onclick="openReviewModal('{{ seller_id }}', '{{ full_name }}')">
+      Leave a Review
+    </button>
 
     <section class="reviews-section">
       <h2 class="mb-3" style="color: #fff">Seller Reviews</h2>
 
-      <!-- Dropdown for filtering reviews by rating -->
       <label for="filter-rating" style="color: #fff">Filter by rating:</label>
       <select id="filter-rating" class="mb-3">
         <option value="">All</option>
@@ -52,7 +53,6 @@
         {% endfor %}
       </select>
 
-      <!-- Message displayed when no reviews match the filter -->
       <p id="no-reviews-message" style="display:none; margin-top:20px; color:#ccc;"></p>
 
       <div class="center-review">
@@ -85,14 +85,15 @@
   </div>
 </div>
 
-
-<!-- Review Modal -->
 <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
+      <!-- Using the same close button style as the purchases page -->
       <div class="modal-header">
         <h5 class="modal-title" id="reviewModalLabel">Write a Review</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
       </div>
       <div class="modal-body">
         <form id="sellerReviewForm" onsubmit="submitSellerReview(event, '{{ seller_id }}')">
@@ -109,7 +110,8 @@
             <label for="comment" class="form-label">Comment:</label>
             <textarea id="comment" class="form-control" rows="3" required></textarea>
           </div>
-          <button type="submit" class="btn btn-success">Submit Review</button>
+          <!-- Match the submit button styling from the purchases page modal -->
+          <button type="submit" class="btn btn-primary">Submit Review</button>
         </form>
       </div>
     </div>
@@ -117,31 +119,32 @@
 </div>
 
 <script>
-    const filterSelect = document.getElementById('filter-rating');
-      const reviewCards = document.querySelectorAll('.card.mb-3[data-rating]');
-      const noReviewsMessage = document.getElementById('no-reviews-message');
+  const filterSelect = document.getElementById('filter-rating');
+  const reviewCards = document.querySelectorAll('.card.mb-3[data-rating]');
+  const noReviewsMessage = document.getElementById('no-reviews-message');
 
-      filterSelect.addEventListener('change', () => {
-        const selectedRating = filterSelect.value;
-        let visibleCount = 0;
+  filterSelect.addEventListener('change', () => {
+    const selectedRating = filterSelect.value;
+    let visibleCount = 0;
 
-        reviewCards.forEach(card => {
-          const cardRating = card.getAttribute('data-rating');
-          if (!selectedRating || cardRating === selectedRating) {
-            card.style.display = 'block';
-            visibleCount++;
-          } else {
-            card.style.display = 'none';
-          }
-        });
+    reviewCards.forEach(card => {
+      const cardRating = card.getAttribute('data-rating');
+      if (!selectedRating || cardRating === selectedRating) {
+        card.style.display = 'block';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
 
-        if (selectedRating && visibleCount === 0) {
-          noReviewsMessage.textContent = `No ${selectedRating}-star ratings`;
-          noReviewsMessage.style.display = 'block';
-        } else {
-          noReviewsMessage.style.display = 'none';
-        }
-      });
+    if (selectedRating && visibleCount === 0) {
+      noReviewsMessage.textContent = `No ${selectedRating}-star ratings`;
+      noReviewsMessage.style.display = 'block';
+    } else {
+      noReviewsMessage.style.display = 'none';
+    }
+  });
+
   // Open Review Modal
   function openReviewModal(sellerId, sellerName) {
     document.querySelectorAll("#starRating .fa-star").forEach((star) => {
@@ -177,7 +180,7 @@
       if (response.ok) {
         alert("Review submitted successfully!");
         document.getElementById("sellerReviewForm").reset();
-        const modal = bootstrap.Modal.getInstance(document.getElementById('reviewModal'));
+        const modal = new bootstrap.Modal(document.getElementById("reviewModal"));
         modal.hide();
         location.reload(); // Reload page to show the new review
       } else {
@@ -219,6 +222,30 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+  }
+
+  /* Match the star styling from the purchases page modal */
+  #starRating .fa-star {
+    font-size: 2rem;
+    color: #ddd;
+    cursor: pointer;
+    margin-right: 0.5rem;
+  }
+
+  #starRating .fa-star.checked {
+    color: #ffc107;
+  }
+
+  /* Match the close button styling from the purchases page modal */
+  .modal-header .close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  .modal-header .close span {
+    display: inline-block;
   }
 </style>
 
