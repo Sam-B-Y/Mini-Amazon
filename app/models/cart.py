@@ -197,9 +197,10 @@ class Cart:
             total_after_coupons = total_cost
 
             user_coupons = app.db.execute("""
-                SELECT coupon_id, discount
-                FROM AppliedCoupons
-                WHERE user_id = :user_id AND cart = TRUE
+                SELECT ac.coupon_id, c.discount
+                FROM AppliedCoupons ac
+                JOIN Coupons c ON ac.coupon_id = c.coupon_id
+                WHERE ac.user_id = :user_id AND ac.cart = TRUE
             """, user_id=user_id)
 
             for coupon_id, discount in user_coupons:

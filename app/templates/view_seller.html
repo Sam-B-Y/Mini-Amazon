@@ -101,7 +101,7 @@
             <label for="rating" class="form-label">Rating (1-5):</label>
             <div id="starRating" class="d-flex">
               {% for i in range(1, 6) %}
-              <i class="fa fa-star" data-value="{{ i }}" onclick="setRating({{ i }})"></i>
+              <i class="fa fa-star" data-value="{{ i }}" onclick="setRating('{{ i }}')"></i>
               {% endfor %}
             </div>
             <input type="hidden" id="reviewRating" name="rating" required>
