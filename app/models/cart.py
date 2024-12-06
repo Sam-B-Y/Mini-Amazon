@@ -51,15 +51,15 @@ class Cart:
         try:
             row = app.db.execute("""
                 SELECT quantity FROM CartItems 
-                WHERE user_id = :user_id AND product_id = :product_id
-            """, user_id=user_id, product_id=product_id)
+                WHERE user_id = :user_id AND product_id = :product_id AND seller_id = :seller_id
+            """, user_id=user_id, product_id=product_id, seller_id=seller_id)
             if row:
-                new_quantity = row.quantity + quantity
+                new_quantity = row[0][0] + quantity
                 app.db.execute("""
                     UPDATE CartItems
                     SET quantity = :quantity
-                    WHERE user_id = :user_id AND product_id = :product_id
-                """, quantity=new_quantity, user_id=user_id, product_id=product_id)
+                    WHERE user_id = :user_id AND product_id = :product_id AND seller_id = :seller_id
+                """, quantity=new_quantity, user_id=user_id, product_id=product_id, seller_id=seller_id)
             else:
                 app.db.execute("""
                     INSERT INTO CartItems(user_id, product_id, seller_id, quantity)
