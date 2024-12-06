@@ -36,3 +36,7 @@ Video: https://drive.google.com/file/d/1hvHwWSZsoIOA_Z2ztLqBKbop-4oFMvTq/view?us
 The process of generating products can be found in Mini-Amazon/db/generatedData/generateProducts.py
 The process of generating users can be found in Mini-Amazon/db/generateusers.py
 The process of generating all other data can be found in Mini-Amazon/make_data.py
+
+
+FINAL VIDEO SUBMISSION:
+https://tinyurl.com/miniamazoncs316
