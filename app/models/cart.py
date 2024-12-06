@@ -194,15 +194,28 @@ class Cart:
 
                 seller_totals[seller_id] = seller_totals.get(seller_id, 0) + unit_price * quantity
 
-            if user_balance < total_cost:
+            total_after_coupons = total_cost
+
+            user_coupons = app.db.execute("""
+                SELECT coupon_id, discount
+                FROM AppliedCoupons
+                WHERE user_id = :user_id AND cart = TRUE
+            """, user_id=user_id)
+
+            for coupon_id, discount in user_coupons:
+                total_after_coupons -= total_after_coupons * discount / 100
+
+            total_after_coupons = round(total_after_coupons, 2)
+
+            if user_balance < total_after_coupons:
                 print("User does not have enough balance.")
                 return "Insufficient balance."
 
             app.db.execute("""
                 UPDATE users
-                SET balance = balance - :total_cost
+                SET balance = balance - :total_after_coupons
                 WHERE user_id = :user_id
-            """, total_cost=total_cost, user_id=user_id)
+            """, total_after_coupons=total_after_coupons, user_id=user_id)
 
             for seller_id, amount in seller_totals.items():
                 app.db.execute("""

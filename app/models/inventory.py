@@ -139,10 +139,23 @@ class Inventory:
             JOIN Users u ON i.seller_id = u.user_id
             WHERE i.product_id = :product_id 
         ''', product_id=product_id)
-        print(rows)
-        row = rows[0]
-        return dict(seller_id=row[0], quantity=row[1], seller_name=row[2]) if rows else None
-
+        return [dict(
+            seller_id=row[0],
+            quantity=row[1],
+            seller_name=row[2]
+        ) for row in rows] if rows else []
+    # @staticmethod
+    # def add_to_inventory(seller_id, product_id, quantity):
+    #     try:
+    #         app.db.execute('''
+    #         INSERT INTO Inventory (seller_id, product_id, quantity)
+    #         VALUES (:seller_id, :product_id, :quantity)
+    #         RETURNING inventory_id
+    #         ''', seller_id=seller_id, product_id=product_id, quantity=quantity)
+    #         return {"product_id": product_id, "seller_id": seller_id, "quantity": quantity}
+    #     except Exception as e:
+    #         print(str(e))
+    #         return None
 
     @staticmethod
     def get_completed_sales_by_product(seller_id):

@@ -10,6 +10,11 @@ SELECT pg_catalog.setval('public.products_product_id_seq',
                          (SELECT MAX(product_id)+1 FROM Products),
                          false);
 
+\Copy Coupons FROM 'coupons.csv' WITH DELIMITER ',' NULL '' CSV HEADER;
+SELECT pg_catalog.setval('public.coupons_coupon_id_seq',
+                         (SELECT MAX(coupon_id)+1 FROM Coupons),
+                         false);
+
 \COPY Inventory FROM 'inventory.csv' WITH DELIMITER ',' NULL '' CSV HEADER;
 SELECT pg_catalog.setval('public.inventory_inventory_id_seq',
                          (SELECT MAX(inventory_id)+1 FROM Inventory),
