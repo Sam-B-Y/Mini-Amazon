@@ -12,11 +12,9 @@
         <a href="/category/{{product.category_name}}">{{ product.category_name }}</a>
         <br>
         
-Sold by:
-{% for inv in inventory %}<button class="btn btn-link" onclick="redirectToSellerPage('{{ inv.seller_id }}')">{{
-  inv.seller_name }}</button>
-
-{% endfor %}<br> 
+Sold by: {% for inv in inventory %} <a href="/user/{{ inv.seller_id }}" class="btn btn-link">{{ inv.seller_name }}</a> {% endfor %}
+  
+      <br> 
       </p>
       <p class="rating">
       <div class="star-rating">

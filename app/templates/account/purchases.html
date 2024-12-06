@@ -43,12 +43,7 @@
             <p>Status: {{ item.status }}</p>
           </div>
           <div class="col-md-2 text-end">
-            <button
-              class="btn btn-link"
-              onclick="redirectToSellerPage('{{ item.seller_id }}')"
-            >
-              View Seller
-            </button>
+            <a href="/user/{{ item.seller_id }}" class="btn btn-link">View Seller</a>
             <a href="/products/{{ item.product_id }}" class="btn btn-link"
               >View Product</a
             >
