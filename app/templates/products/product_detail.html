@@ -38,12 +38,26 @@ Sold by: <button class="btn btn-link" onclick="redirectToSellerPage('{{ inventor
       </p>
       <div class="sellers-section">
         <div class="sellers-list">
-              <form class="add-to-cart-form" data-seller-id="{{ inventory.seller_id }}">
-                <input type="number" name="quantity" min="1" max="{{ inventory.quantity }}" value="1" />
-                <button type="submit" class="add-to-cart-btn">
-  <i class="fa fa-shopping-basket"></i> Add to Cart
-</button>
-              </form>
+          <form class="add-to-cart-form">
+            <div class="form-group mb-3">
+              <label for="seller-select">Select Seller:</label>
+              <select id="seller-select" name="seller_id" class="form-select" required>
+                <option value="">Choose a seller</option>
+                {% for seller in product.get_sellers(product.product_id) %}
+                <option value="{{ seller.seller_id }}" data-quantity="{{ seller.quantity }}">
+                  {{ seller.seller_name }} ({{ seller.quantity }} available)
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group mb-3">
+              <label for="quantity">Quantity:</label>
+              <input type="number" id="quantity" name="quantity" min="1" value="1" class="form-control" required />
+            </div>
+            <button type="submit" class="add-to-cart-btn">
+              <i class="fa fa-shopping-basket"></i> Add to Cart
+            </button>
+          </form>
         </div>
       </div>
     </div>
@@ -84,40 +98,60 @@ Sold by: <button class="btn btn-link" onclick="redirectToSellerPage('{{ inventor
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(";").shift();
   };
-  
-  document.querySelectorAll(".add-to-cart-form").forEach((form) => {
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const sellerId = form.dataset.sellerId;
-      const quantity = form.querySelector('input[name="quantity"]').value;
+  document.addEventListener('DOMContentLoaded', function() {
+    const sellerSelect = document.getElementById('seller-select');
+    if (sellerSelect) {
+      sellerSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const maxQuantity = selectedOption.dataset.quantity;
+        const quantityInput = document.getElementById('quantity');
+        
+        quantityInput.max = maxQuantity;
+        if (parseInt(quantityInput.value) > maxQuantity) {
+          quantityInput.value = maxQuantity;
+        }
+      });
+    }
 
-      try {
-        const formData = new FormData();
-        formData.append("product_id", "{{ product.product_id }}");
-        formData.append("seller_id", sellerId);
-        formData.append("quantity", parseInt(quantity));
+    document.querySelectorAll(".add-to-cart-form").forEach((form) => {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const sellerId = form.querySelector('select[name="seller_id"]').value;
+        const quantity = form.querySelector('input[name="quantity"]').value;
 
-        const userId = getCookie("id");
-        if (!userId) {
-          alert("Need to login first");
+        if (!sellerId) {
+          alert("Please select a seller");
           return;
         }
-        else {
-          const response = await fetch("/cart/add", {
-            method: "POST",
-            body: formData,
-          });
 
-          if (response.ok) {
-            alert("Added to cart successfully!");
-          } else {
-            alert("Failed to add to cart. Please try again.");
+        try {
+          const formData = new FormData();
+          formData.append("product_id", "{{ product.product_id }}");
+          formData.append("seller_id", sellerId);
+          formData.append("quantity", parseInt(quantity));
+
+          const userId = getCookie("id");
+          if (!userId) {
+            alert("Need to login first");
+            return;
           }
+          else {
+            const response = await fetch("/cart/add", {
+              method: "POST",
+              body: formData,
+            });
+
+            if (response.ok) {
+              alert("Added to cart successfully!");
+            } else {
+              alert("Failed to add to cart. Please try again.");
+            }
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          alert("An error occurred. Please try again.");
         }
-      } catch (error) {
-        console.error("Error:", error);
-        alert("An error occurred. Please try again.");
-      }
+      });
     });
   });
 </script>
