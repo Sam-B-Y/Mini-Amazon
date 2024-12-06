@@ -79,6 +79,12 @@ Sold by: <button class="btn btn-link" onclick="redirectToSellerPage('{{ inventor
 </div>
 
 <script>
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+  };
+  
   document.querySelectorAll(".add-to-cart-form").forEach((form) => {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -91,15 +97,22 @@ Sold by: <button class="btn btn-link" onclick="redirectToSellerPage('{{ inventor
         formData.append("seller_id", sellerId);
         formData.append("quantity", parseInt(quantity));
 
-        const response = await fetch("/cart/add", {
-          method: "POST",
-          body: formData,
-        });
+        const userId = getCookie("id");
+        if (!userId) {
+          alert("Need to login first");
+          return;
+        }
+        else {
+          const response = await fetch("/cart/add", {
+            method: "POST",
+            body: formData,
+          });
 
-        if (response.ok) {
-          alert("Added to cart successfully!");
-        } else {
-          alert("Failed to add to cart. Please try again.");
+          if (response.ok) {
+            alert("Added to cart successfully!");
+          } else {
+            alert("Failed to add to cart. Please try again.");
+          }
         }
       } catch (error) {
         console.error("Error:", error);
