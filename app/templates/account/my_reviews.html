@@ -8,13 +8,27 @@
 <!-- Dropdown for selecting review type -->
 <div class="container mt-4">
     <label for="reviewType" class="form-label">Select Review Type:</label>
-    <select id="reviewType" class="form-select" onchange="fetchRecentReviews()">
+    <select id="reviewType" class="form-select">
         <option value="product">Product Reviews</option>
         <option value="seller">Seller Reviews</option>
     </select>
 </div>
 
+<!-- Dropdown for filtering reviews by rating -->
+<div class="container mt-3">
+    <label for="filterRating" class="form-label">Filter by Rating:</label>
+    <select id="filterRating" class="form-select">
+        <option value="">All Ratings</option>
+        {% for i in range(1, 6) %}
+        <option value="{{ i }}">{{ i }} star{{ '' if i == 1 else 's' }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+<!-- Reviews Container -->
 <div id="reviews" class="container mt-4"></div>
+<p id="noReviewsMessage" class="text-muted text-center" style="display: none;">No reviews match the selected filters.
+</p>
 
 <div class="modal fade" id="editReviewModal" tabindex="-1" aria-labelledby="editReviewModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -52,15 +66,27 @@
 </div>
 
 <script>
+    // Restore dropdown selections from localStorage on page load
+    window.onload = () => {
+        const storedReviewType = localStorage.getItem('reviewType') || 'product';
+        const storedFilterRating = localStorage.getItem('filterRating') || '';
+
+        document.getElementById('reviewType').value = storedReviewType;
+        document.getElementById('filterRating').value = storedFilterRating;
+
+        fetchRecentReviews();
+    };
+
     async function fetchRecentReviews() {
         const reviewsContainer = document.getElementById("reviews");
+        const noReviewsMessage = document.getElementById("noReviewsMessage");
         const reviewType = document.getElementById("reviewType").value;
-        let apiUrl = '';
+        let apiUrl = "";
 
-        if (reviewType === 'product') {
-            apiUrl = '/api/reviews/my_product'; // Endpoint for product reviews
-        } else if (reviewType === 'seller') {
-            apiUrl = '/api/reviews/my_seller'; // Endpoint for seller reviews
+        if (reviewType === "product") {
+            apiUrl = "/api/reviews/my_product";
+        } else if (reviewType === "seller") {
+            apiUrl = "/api/reviews/my_seller";
         }
 
         try {
@@ -69,49 +95,91 @@
 
             if (reviews.error) {
                 reviewsContainer.innerHTML = `<p class="text-danger">${reviews.error}</p>`;
+                noReviewsMessage.style.display = "none";
                 return;
             }
 
-            reviewsContainer.innerHTML = ""; // Clear previous reviews
+            reviewsContainer.innerHTML = "";
 
             if (reviews.length > 0) {
                 reviews.forEach((review) => {
                     const reviewElement = document.createElement("div");
-                    reviewElement.classList.add("card", "mb-4");
-                    if (reviewType === 'product') {
+                    reviewElement.classList.add("card", "mb-4", "review-card");
+                    reviewElement.setAttribute("data-rating", review.rating);
+
+                    if (reviewType === "product") {
                         reviewElement.innerHTML = `
-                <p>Product: <a href="/products/${review.product_id}">${review.product_name}</a></p>
-            `;
-                    } else if (reviewType === 'seller') {
-                        reviewElement.innerHTML = ``;
+                            <p>Product: <a href="/products/${review.product_id}">${review.product_name}</a></p>
+                        `;
+                    } else if (reviewType === "seller") {
+                        reviewElement.innerHTML = `
+                            <p>Seller: <a href="/user/${review.seller_id}">${review.seller_name}</a></p>
+                        `;
                     }
+
                     reviewElement.innerHTML += `
-                                        
-                    <p>Seller: <a href="/user/${review.seller_id}">${review.seller_name}</a></p>
-                    <div class="card-body">
-                        <h5 class="card-title">Rating: ${renderStars(review.rating)}</h5>
-                        <p class="card-text">Comment: ${review.comment}</p>
-                        <p class="text-muted">Added at: ${review.timestamp}</p>
-                        <div class="d-flex justify-content-end">
-                            <button class="btn btn-warning btn-sm me-2" onclick="openEditReviewModal(${review.id}, '${review.rating}', '${review.comment}')">
-                                <i class="fa fa-edit"></i> Edit
-                            </button>
-                            <button class="btn btn-danger btn-sm ms-2" onclick="deleteReview(${review.id})">
-                                <i class="fa fa-trash"></i> Delete
-                            </button>
+                        <div class="card-body">
+                            <h5 class="card-title">Rating: ${renderStars(review.rating)}</h5>
+                            <p class="card-text">Comment: ${review.comment}</p>
+                            <p class="text-muted">Added at: ${review.timestamp}</p>
+                            <div class="d-flex justify-content-end">
+                                <button class="btn btn-warning btn-sm me-2" onclick="openEditReviewModal(${review.id}, '${review.rating}', '${review.comment}')">
+                                    <i class="fa fa-edit"></i> Edit
+                                </button>
+                                <button class="btn btn-danger btn-sm ms-2" onclick="deleteReview(${review.id})">
+                                    <i class="fa fa-trash"></i> Delete
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
+
                     reviewsContainer.appendChild(reviewElement);
                 });
+                noReviewsMessage.style.display = "none";
             } else {
-                reviewsContainer.innerHTML = "<p class='text-muted'>No recent reviews yet.</p>";
+                noReviewsMessage.style.display = "block";
             }
+
+            applyRatingFilter();
         } catch (error) {
             console.error("Error fetching reviews:", error);
             reviewsContainer.innerHTML = "<p class='text-danger'>An error occurred while fetching reviews.</p>";
+            noReviewsMessage.style.display = "none";
         }
     }
+
+    function applyRatingFilter() {
+        const selectedRating = document.getElementById("filterRating").value;
+        const reviewCards = document.querySelectorAll(".review-card");
+        const noReviewsMessage = document.getElementById("noReviewsMessage");
+        let visibleCount = 0;
+
+        reviewCards.forEach((card) => {
+            const cardRating = card.getAttribute("data-rating");
+            if (!selectedRating || cardRating === selectedRating) {
+                card.style.display = "block";
+                visibleCount++;
+            } else {
+                card.style.display = "none";
+            }
+        });
+
+        noReviewsMessage.style.display = visibleCount === 0 ? "block" : "none";
+    }
+
+    document.getElementById("filterRating").addEventListener("change", () => {
+        // Store the selected filter in localStorage
+        const filterValue = document.getElementById("filterRating").value;
+        localStorage.setItem('filterRating', filterValue);
+        applyRatingFilter();
+    });
+
+    document.getElementById("reviewType").addEventListener("change", () => {
+        // Store the selected review type in localStorage
+        const reviewTypeValue = document.getElementById("reviewType").value;
+        localStorage.setItem('reviewType', reviewTypeValue);
+        fetchRecentReviews();
+    });
 
     function renderStars(rating) {
         let stars = "";
@@ -120,26 +188,11 @@
         }
         return stars;
     }
-    document.querySelectorAll("#starRating .fa-star").forEach((star) => {
-        star.addEventListener("click", function () {
-            const rating = this.getAttribute("data-value");
-            document.getElementById("editReviewRating").value = rating;
-            document.querySelectorAll("#starRating .fa-star").forEach((s) => {
-                s.classList.remove("checked");
-            });
-            for (let i = 0; i < rating; i++) {
-                document
-                    .querySelectorAll("#starRating .fa-star")
-                [i].classList.add("checked");
-            }
-        });
-    });
 
     function openEditReviewModal(reviewId, currentRating, currentComment) {
         document.getElementById("editReviewId").value = reviewId;
         document.getElementById("editReviewComment").value = currentComment;
         const stars = document.querySelectorAll("#starRating .fa-star");
-
         stars.forEach((star) => {
             star.classList.remove("checked");
         });
@@ -148,9 +201,19 @@
         }
         document.getElementById("editReviewRating").value = currentRating;
 
-        const modal = new bootstrap.Modal(
-            document.getElementById("editReviewModal")
-        );
+        // Add click event listeners to stars to change rating dynamically
+        stars.forEach((star) => {
+            star.onclick = function () {
+                const newRating = this.getAttribute("data-value");
+                document.getElementById("editReviewRating").value = newRating;
+                stars.forEach((s) => s.classList.remove("checked"));
+                for (let j = 0; j < newRating; j++) {
+                    stars[j].classList.add("checked");
+                }
+            };
+        });
+
+        const modal = new bootstrap.Modal(document.getElementById("editReviewModal"));
         modal.show();
     }
 
@@ -158,11 +221,9 @@
         .getElementById("editReviewForm")
         .addEventListener("submit", async function (event) {
             event.preventDefault();
-
             const form = event.target;
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
-
             try {
                 const response = await fetch(`/api/reviews/edit`, {
                     method: "POST",
@@ -171,9 +232,9 @@
                     },
                     body: JSON.stringify(data),
                 });
-
                 if (response.ok) {
                     alert("Review updated successfully!");
+                    // The page reloads here, but selections are preserved in localStorage
                     window.location.reload();
                 } else {
                     alert("Failed to update review.");
@@ -196,6 +257,7 @@
                 .then((response) => {
                     if (response.ok) {
                         alert("Review deleted successfully!");
+                        // The page reloads here, but selections are preserved in localStorage
                         window.location.reload();
                     } else {
                         alert("Failed to delete review.");
@@ -207,30 +269,28 @@
                 });
         }
     }
-    // Existing code for editing and deleting reviews remains unchanged
-
-    window.onload = fetchRecentReviews;
 </script>
 
 <style>
-    .card {
-        color: #000;
-    }
-
-    .btn i {
-        margin-right: 5px;
+    .review-card {
+        border: 1px solid #ddd;
+        padding: 20px;
+        border-radius: 8px;
     }
 
     .fa-star {
         font-size: 1.5rem;
         color: #ddd;
         cursor: pointer;
-        margin-right: 0.5rem;
     }
 
-    .btn-warning,
-    .btn-danger {
-        margin-right: 10px;
+    .fa-star.checked {
+        color: #f1c40f;
+    }
+
+    #noReviewsMessage {
+        text-align: center;
+        margin-top: 20px;
     }
 </style>
 
