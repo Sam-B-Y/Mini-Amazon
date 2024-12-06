@@ -68,7 +68,7 @@ CREATE TABLE AppliedCoupons (
     user_id INT NOT NULL,
     coupon_id INT NOT NULL,
     cart BOOLEAN NOT NULL DEFAULT FALSE,
-    order_id INT NOT NULL,
+    order_id INT,
     FOREIGN KEY (user_id) REFERENCES Users(user_id),
     FOREIGN KEY (coupon_id) REFERENCES Coupons(coupon_id),
     PRIMARY KEY (user_id, coupon_id)
