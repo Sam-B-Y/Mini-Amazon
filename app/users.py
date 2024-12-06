@@ -186,6 +186,20 @@ def purchase_history():
 
     return render_template('account/purchases.html', title="Purchase History", order_history=order_history, page=page, total_pages=total_pages)
 
+@bp.route('/become_seller', methods=['GET'])
+def become_seller():
+    id = int(request.cookies.get("id"))
+    user = User.get(id)
+
+    if user is None:
+        logout_user()
+        return redirect(url_for('users.login'))
+
+    User.become_seller(id)
+    flash("You are now a seller!", "success")
+    
+    return redirect(url_for('users.view_account'))
+
 @bp.route('/seller_profile', methods=['GET'])
 def seller_profile():
     id = int(request.cookies.get("id"))
@@ -197,9 +211,12 @@ def seller_profile():
 
     is_seller = User.is_seller(id)
     if not is_seller:
+        # alert user that they are not a seller
+        flash("Cannot open page - you are not a seller.", "danger")
         return redirect(url_for('users.view_account'))
     
     stats = User.get_seller_stats(id)
+    print(stats)
 
     return render_template('seller/main.html', title="Seller Profile", seller_stats=stats)
 
