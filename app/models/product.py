@@ -80,7 +80,6 @@ WHERE i.product_id = :product_id AND u.is_seller = TRUE
         return [p.to_dict_search() for p in products]  # Convert Product objects to dictionaries
 
     
-
     @staticmethod
     def get_all():
         rows = app.db.execute('''
@@ -99,7 +98,6 @@ FROM Products
         ''', k=k)
         return [Product(*row) for row in rows]
 
-    @staticmethod
     def to_dict(self):
         return {
             'product_id': self.product_id,

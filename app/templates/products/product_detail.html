@@ -15,7 +15,10 @@
           >{{ product.category_name }}</a
         >
         <br>
-Sold by: <a href="/user/{{ inventory.seller_id }}">{{ inventory.seller_name }}</a> <br> Available Quantity: {{ inventory.quantity }}
+        
+Sold by: <button class="btn btn-link" onclick="redirectToSellerPage('{{ inventory.seller_id }}')">
+  {{ inventory.seller_name }}
+</button> <br> Available Quantity: {{ inventory.quantity }}
       </p>
       <p class="rating">
         <div class="star-rating">
