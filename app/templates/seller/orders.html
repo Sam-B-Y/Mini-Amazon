@@ -55,12 +55,13 @@
 <script>
 async function loadOrders() {
   try {
-    const statusFilter = document.getElementById("orderStatusFilter").value;
-    const searchQuery = document.getElementById("orderSearchInput").value.trim();
+    const statusFilter = document.getElementById("orderStatusFilter").value; // Get selected status
+    const searchQuery = document.getElementById("orderSearchInput").value.trim(); // Get search query
     const ordersContainer = document.getElementById("ordersContainer");
 
     ordersContainer.innerHTML = "";
 
+    // Correct API endpoint
     const response = await fetch(`/orders/api/seller_orders?status=${encodeURIComponent(statusFilter)}&search=${encodeURIComponent(searchQuery)}`);
     const data = await response.json();
 
@@ -70,32 +71,32 @@ async function loadOrders() {
       return;
     }
 
-    if (data.orders.length === 0) {
-      ordersContainer.innerHTML = '<p class="text-muted text-center">No orders found.</p>';
+    if (data.orderItems.length === 0) {
+      ordersContainer.innerHTML = '<p class="text-muted text-center">No order items found.</p>';
       return;
     }
 
-    data.orders.forEach((order) => {
-      const badgeClass = getBadgeClass(order.order_status);
-      const isComplete = order.completion_status; // True if all order_items are complete
+    // Render order items
+    data.orderItems.forEach((item) => {
+      const badgeClass = getBadgeClass(item.status);
+
+      // Safely handle unit_price
+      const unitPrice = typeof item.unit_price === "number" ? item.unit_price : parseFloat(item.unit_price) || 0;
 
       const card = document.createElement("div");
       card.className = "col-lg-4 col-md-6 col-sm-12";
       card.innerHTML = `
-        <div class="card shadow-sm border-0 ${isComplete ? 'bg-success-subtle' : ''}" onclick="showLineOrders(${order.order_id})" style="cursor: pointer;">
+        <div class="card shadow-sm border-0" style="cursor: pointer;">
           <div class="card-header d-flex justify-content-between align-items-center bg-light">
-            <span class="fw-bold">Order ID: ${order.order_id}</span>
+            <span class="fw-bold">Order ID: ${item.order_id}</span>
+            <span class="badge ${badgeClass}">${item.status}</span>
           </div>
           <div class="card-body">
-            <p><strong>Buyer:</strong> ${order.buyer_name}</p>
-            <p><strong>Address:</strong> ${order.buyer_address}</p>
-            <p><strong>Date:</strong> ${new Date(order.ordered_time).toLocaleDateString()}</p>
-            <p><strong>Quantity:</strong> ${order.quantity}</p>
-            <p><strong>Total:</strong> $${(order.quantity * order.unit_price).toFixed(2)}</p>
-            ${isComplete 
-              ? '<p class="text-success">All items are complete!</p>' 
-              : '<p class="text-danger">Order Items Pending.</p>'}
-
+            <p><strong>Product ID:</strong> ${item.product_id}</p>
+            <p><strong>Quantity:</strong> ${item.quantity}</p>
+            <p><strong>Unit Price:</strong> $${unitPrice.toFixed(2)}</p>
+            <p><strong>Buyer Name:</strong> ${item.buyer_name}</p>
+            <p><strong>Buyer Address:</strong> ${item.buyer_address}</p>
           </div>
         </div>
       `;
@@ -105,6 +106,8 @@ async function loadOrders() {
     console.error("Error loading orders:", error);
   }
 }
+
+
 
 
   async function showLineOrders(orderId) {
