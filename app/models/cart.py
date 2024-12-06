@@ -239,6 +239,13 @@ class Cart:
             """, user_id=user_id)
             order_id = order_id_rows[0][0]
 
+            for coupon_id, _ in user_coupons:
+                app.db.execute("""
+                UPDATE AppliedCoupons
+                SET cart = FALSE, order_id = :order_id
+                WHERE user_id = :user_id AND coupon_id = :coupon_id
+                """, user_id=user_id, coupon_id=coupon_id, order_id=order_id)
+
             for product_id, seller_id, quantity, unit_price in items_to_purchase:
                 app.db.execute("""
                     INSERT INTO OrderItems(order_id, product_id, seller_id, quantity, unit_price)

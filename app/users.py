@@ -213,7 +213,7 @@ def purchase_history():
     for order in orders:
         order['final_price'] = order['price']
         for coupon in order['coupons']:
-            order['final_price'] -= order['price'] * coupon.discount
+            order['final_price'] -= order['price'] * coupon.discount / 100
 
         order['final_price'] = round(order['final_price'], 2)
 

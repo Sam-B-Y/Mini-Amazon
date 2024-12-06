@@ -78,7 +78,7 @@ class Coupon:
         try:
             app.db.execute("""
             DELETE FROM AppliedCoupons
-            WHERE user_id = :user_id AND coupon_id = :coupon_id AND cart = TRUE
+            WHERE user_id = :user_id AND coupon_id = :coupon_id
             """, user_id=user_id, coupon_id=coupon_id)
             return True
         except Exception as e:
