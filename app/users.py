@@ -274,3 +274,21 @@ def get_user_email(user_id):
         return jsonify({'error': 'User not found'}), 404
     return jsonify({'email': email})
 
+@bp.route('/user/<int:user_id>')
+def view_seller(user_id):
+    seller = User.get(user_id)
+    if not seller:
+        flash('Seller not found')
+        return redirect(url_for('index.index'))
+
+    # Get all reviews for this seller
+    reviews = Review.get_seller_reviews(user_id)
+
+    # Calculate average rating
+    if reviews:
+        total_rating = sum(review.rating for review in reviews)
+        average_rating = total_rating / len(reviews)
+    else:
+        average_rating = 0
+
+    return render_template('view_seller.html', seller=seller, reviews=reviews, average_rating=average_rating)

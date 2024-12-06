@@ -1,4 +1,5 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %} 
+{% block content %}
 
 <div class="container mt-5 sellerinfo">
   <div class="text-light">
@@ -23,49 +24,78 @@
             reviews | length if reviews else 0 %} {% for i in range(1, 6) %} {%
             if average_rating >= i %}
             <i class="fa fa-star filled"></i>
-            {% elif average_rating > i - 1 %}
-            <i
-              class="fa fa-star filled fractional"
-              style="--fraction-width: {{ (average_rating - (i - 1)) * 100 }}%;"
-            ></i>
+            {% elif average_rating > i - 1 %} 
+            <i class="fa fa-star filled fractional" style="--fraction-width: {{ (average_rating - (i - 1)) * 100 }}%;"></i>
             {% else %}
             <i class="fa fa-star empty"></i>
-            {% endif %} {% endfor %}
+            {% endif %} {% endfor %} 
             <span class="ml-2">({{ reviews|length if reviews else 0 }})</span>
           </div>
         </div>
       </div>
     </div>
 
+    <button class="btn btn-primary mb-3" onclick="openReviewModal('{{ seller_id }}', '{{ full_name }}')">Leave a Review</button>
+
     <section class="reviews-section">
-      <h2 class="mb-3" style="color: #fff">Reviews</h2>
-      {% if reviews %} {% for review in reviews %}
-      <div class="card mb-3">
-        <div class="card-body">
-          <div class="d-flex align-items-center mb-2">
-            <div class="star-rating centered-stars">
-              {% for i in range(1, 6) %} {% if review.rating >= i %}
-              <i class="fa fa-star filled"></i>
-              {% elif review.rating > i - 1 %}
-              <i
-                class="fa fa-star filled fractional"
-                style="--fraction-width: {{ (review.rating - (i - 1)) * 100 }}%;"
-              ></i>
-              {% else %}
-              <i class="fa fa-star empty"></i>
-              {% endif %} {% endfor %}
+      <h2 class="mb-3" style="color: #fff">Seller Reviews</h2>
+      <div class="center-review">
+        {% if reviews %} 
+        {% for review in reviews %}
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-2">
+              <div class="star-rating centered-stars">
+                {% for i in range(1, 6) %} 
+                {% if review.rating >= i %}
+                <i class="fa fa-star filled"></i>
+                {% else %}
+                <i class="fa fa-star empty"></i>
+                {% endif %} 
+                {% endfor %}
+              </div>
+              <span class="ms-2">{{ review.full_name }}</span>
             </div>
+            <p class="mb-1">{{ review.comment }}</p>
+            <small class="text-muted">Added at: {{ review.added_at }}</small>
           </div>
-          <p class="mb-1">{{ review.comment }}</p>
-          <small class="text-muted"
-            >Added at: {{ review.added_at }} by {{ review.full_name }}</small
-          >
         </div>
+        {% endfor %} 
+        {% else %}
+        <p class="text-muted">No reviews yet.</p>
+        {% endif %}
       </div>
-      {% endfor %} {% else %}
-      <p class="text-muted">No reviews yet.</p>
-      {% endif %}
     </section>
+  </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="reviewModalLabel">Write a Review</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="sellerReviewForm" onsubmit="submitSellerReview(event, '{{ seller_id }}')">
+          <div class="mb-3">
+            <label for="rating" class="form-label">Rating (1-5):</label>
+            <div id="starRating" class="d-flex">
+              {% for i in range(1, 6) %}
+              <i class="fa fa-star" data-value="{{ i }}" onclick="setRating('{{ i }}')"></i>
+              {% endfor %}
+            </div>
+            <input type="hidden" id="reviewRating" name="rating" required>
+          </div>
+          <div class="mb-3">
+            <label for="comment" class="form-label">Comment:</label>
+            <textarea id="comment" class="form-control" rows="3" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-success">Submit Review</button>
+        </form>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -75,29 +105,14 @@
   }
 
   .star-rating .fa-star {
-    font-size: 1.5rem;
-    color: #f5c518;
-    margin-right: 0.25rem;
+    font-size: 2rem;
+    color: #ddd;
+    cursor: pointer;
+    margin-right: 0.5rem;
   }
 
-  .star-rating .fa-star.empty {
-    color: #ccc;
-  }
-
-  .fractional {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .fractional:before {
-    content: "\f005";
-    font-family: FontAwesome;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: var(--fraction-width, 50%);
-    color: #f5c518;
-    overflow: hidden;
+  .star-rating .fa-star.checked {
+    color: #ffc107;
   }
 
   .card {
@@ -123,5 +138,62 @@
     align-items: center;
   }
 </style>
+
+<script>
+  function openReviewModal(sellerId, sellerName) {
+    document.querySelectorAll("#starRating .fa-star").forEach((star) => {
+      star.classList.remove("checked");
+    });
+    document.getElementById("reviewRating").value = "";
+    const modal = new bootstrap.Modal(document.getElementById("reviewModal"));
+    document.getElementById("reviewModalLabel").textContent = `Review for ${sellerName}`;
+    modal.show();
+  }
+
+  function setRating(rating) {
+    document.getElementById("reviewRating").value = rating;
+    document.querySelectorAll("#starRating .fa-star").forEach((star, index) => {
+      star.classList.toggle("checked", index < rating);
+    });
+  }
+
+  async function submitSellerReview(event, sellerId) {
+    event.preventDefault();
+    const rating = document.getElementById("reviewRating").value;
+    const comment = document.getElementById("comment").value;
+
+    console.log("Submitting review:", { sellerId, rating, comment }); // Log the data being sent
+
+    try {
+      
+      const response = await fetch('/api/reviews/seller_review', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          seller_id: sellerId,
+          rating: rating,
+          comment: comment,
+        }),
+      });
+      console.log(sellerId, rating, comment);
+      const data = await response.json();
+      console.log(data);
+
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+
+      alert("Review submitted successfully!");
+      document.getElementById("sellerReviewForm").reset();
+      $('#reviewModal').modal('hide'); // Hide the modal after submission
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      alert("An unexpected error occurred.");
+    }
+  }
+</script>
 
 {% endblock %}
