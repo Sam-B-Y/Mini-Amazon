@@ -82,9 +82,10 @@
               <p class="card-text">Comment: ${review.comment}</p>
               <p class="text-muted">Added at: ${review.timestamp}</p>
             
-            <p>Seller: <a href="/seller/${review.seller_id}">${
-            review.seller_name
-          }</a></p>
+            <p>Seller:
+          <button class="btn btn-link" onclick="redirectToSellerPage('${review.seller_id}')">
+            ${review.seller_name}
+          </button></p>
               
               <div class="d-flex justify-content-end">
                 <button

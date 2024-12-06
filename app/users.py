@@ -245,27 +245,33 @@ def view_account():
     
     return render_template('account/main.html', title="View Account")
 
-                        
-@bp.route('/user/<id>')
-def view_user(id):
-    user = User.get(id)
+@bp.route('/user/<hashed_email>')
+def view_user(hashed_email):
+    users = User.get_all()
+    found_user = None
     
-    if not user:
+    for user in users:
+        user_hash = sha256(user.email.encode()).hexdigest()
+        if user_hash == hashed_email:
+            found_user = user
+            break
+    
+    if not found_user:
         abort(404)
 
-    is_seller = User.is_seller(id)
-
+    is_seller = User.is_seller(found_user.id)
+        
     if not is_seller:
         return render_template('view_user.html', 
-                         full_name=user.full_name,
-                         email=user.email, id=user.id)
+                         full_name=found_user.full_name,
+                         email=found_user.email,
+                         seller_id=found_user.id)
 
-    ratings = Review.get_seller_reviews(id)
-        
+    ratings = Review.get_seller_reviews(found_user.id)
     return render_template('view_seller.html', 
-                         full_name=user.full_name,
-                         email=user.email,
-                         seller_id=user.id, reviews=ratings, address=user.address)
+                         full_name=found_user.full_name,
+                         email=found_user.email,
+                         seller_id=found_user.id, reviews=ratings, address=found_user.address)
 
 @bp.route('/api/user/<int:user_id>/email')
 def get_user_email(user_id):
