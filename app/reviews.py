@@ -126,7 +126,7 @@ def reviews_product():
 
 @bp.route('/reviewsrecent', methods = ['GET'])
 def reviews_page():
-    return render_template('/account/my_reviews_updated.html')
+    return render_template('/account/my_reviews.html')
 
 @bp.route('/api/reviews/seller/<int:seller_id>', methods=['GET'])
 def seller_reviews(seller_id):

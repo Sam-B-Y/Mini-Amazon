@@ -1,7 +1,4 @@
 from flask import current_app as app
-from flask import session
-import re
-import logging
 
 class Product:
     def __init__(self, product_id, category_name, name, description, image_url, price, created_by):
@@ -64,6 +61,25 @@ WHERE i.product_id = :product_id AND u.is_seller = TRUE
 
         rows = app.db.execute(query, **params)
         return [Product(*row) for row in rows]
+
+    def to_dict_search(self):
+        return {
+            'product_id': self.product_id,
+            'category_name': self.category_name,
+            'name': self.name,
+            'description': self.description,
+            'image_url': self.image_url,
+            'price': float(self.price),
+            'created_by': self.created_by
+        }
+
+    @staticmethod
+    def search_and_return_existing(keywords):
+        """Search for products based on keywords and return their details."""
+        products = Product.search(keywords=keywords)
+        return [p.to_dict_search() for p in products]  # Convert Product objects to dictionaries
+
+    
 
     @staticmethod
     def get_all():
@@ -200,6 +216,38 @@ FROM Products
             'inventory': inventory,
             'sellers': sellers
         }
+
+    @staticmethod
+    def get_top_selling_products(limit=10):
+        rows = app.db.execute('''
+            SELECT 
+                p.product_id, 
+                p.category_name, 
+                p.name, 
+                p.description, 
+                p.image_url, 
+                p.price, 
+                p.created_by,
+                COALESCE(AVG(r.rating), -1) as avg_review_score,
+                COUNT(DISTINCT r.review_id) as review_count
+            FROM Products p
+            LEFT JOIN Reviews r ON p.product_id = r.product_id
+            GROUP BY 
+                p.product_id, 
+                p.category_name, 
+                p.name, 
+                p.description, 
+                p.image_url, 
+                p.price, 
+                p.created_by
+            HAVING COUNT(DISTINCT r.review_id) >= 3  -- Only products with at least 3 reviews
+            ORDER BY 
+                COALESCE(AVG(r.rating), -1) DESC,    -- Highest rated first
+                COUNT(DISTINCT r.review_id) DESC      -- Then by number of reviews
+            LIMIT :limit
+        ''', limit=limit)
+        return rows
+
 
 class Category:
     def __init__(self, category_name):
