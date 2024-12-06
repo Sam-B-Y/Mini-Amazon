@@ -150,9 +150,13 @@ async function loadOrders() {
                   <td>
                     ${order.status === "Complete" ? 
                       '<span class="text-success">Completed</span>' : 
-                      `<button class="btn btn-success btn-sm" onclick="markLineItemAsComplete(${orderId}, ${order.product_id})">Mark as Complete</button>`
+                      order.status === "Pending" ?
+                        `<button class="btn btn-success btn-sm" onclick="updateLineItemStatus(${orderId}, ${order.product_id}, 'Complete')">Mark as Complete</button>` :
+                        `<button class="btn btn-warning btn-sm" onclick="updateLineItemStatus(${orderId}, ${order.product_id}, 'Pending')">Mark as Pending</button>`
                     }
                   </td>
+
+
                 </tr>
               `).join('')}
             </tbody>
@@ -211,6 +215,31 @@ async function loadOrders() {
     loadOrders(); // Refresh the main order list
   } catch (error) {
     console.error("Error marking item as complete:", error);
+  }
+}
+async function updateLineItemStatus(orderId, productId, newStatus) {
+  try {
+    const response = await fetch(`/orders/api/update_line_item_status`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ order_id: orderId, product_id: productId, status: newStatus }),
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+      console.error(data.error);
+      alert("Failed to update item status.");
+      return;
+    }
+
+    alert(`Item status updated to ${newStatus}!`);
+    showLineOrders(orderId); // Refresh the modal
+    loadOrders(); // Refresh the main order list
+  } catch (error) {
+    console.error("Error updating item status:", error);
   }
 }
 

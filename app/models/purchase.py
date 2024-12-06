@@ -100,22 +100,15 @@ ORDER BY ordered_time DESC
             return False
 
     @staticmethod
-    def get_line_items(order_id, seller_id):
-        """Fetch all line items for a specific order and seller."""
+    def get_line_item_status(order_id, product_id, seller_id):
+        """Fetch the current status of a specific line item."""
         rows = app.db.execute('''
-            SELECT product_id, quantity, unit_price, status
+            SELECT status
             FROM orderitems
-            WHERE order_id = :order_id AND seller_id = :seller_id
-        ''', order_id=order_id, seller_id=seller_id)
+            WHERE order_id = :order_id AND product_id = :product_id AND seller_id = :seller_id
+        ''', order_id=order_id, product_id=product_id, seller_id=seller_id)
         
-        return [
-            {
-                "product_id": row[0],
-                "quantity": row[1],
-                "unit_price": row[2],
-                "status": row[3],
-            } for row in rows
-        ]
+        return rows[0][0] if rows else None
 
 
     @staticmethod
@@ -128,3 +121,81 @@ ORDER BY ordered_time DESC
         ''', order_id=order_id, product_id=product_id, seller_id=seller_id)
 
         return rows_affected > 0
+    
+
+    @staticmethod
+    def update_order_status_if_complete(order_id):
+        """Check if all items in the order are complete and update the order's status."""
+        try:
+            # Check if all items for the given order_id are marked as 'Complete'
+            rows = app.db.execute('''
+                SELECT COUNT(*)
+                FROM orderitems
+                WHERE order_id = :order_id AND status != 'Complete'
+            ''', order_id=order_id)
+
+            # If no items are pending, mark the order as 'Complete'
+            if rows[0][0] == 0:
+                app.db.execute('''
+                    UPDATE orders
+                    SET status = 'Complete'
+                    WHERE order_id = :order_id
+                ''', order_id=order_id)
+                return True  # Indicate that the order was marked as complete
+            return False  # Indicate that the order remains incomplete
+        except Exception as e:
+            print(f"Error updating order status: {e}")
+            return False
+
+    @staticmethod
+    def update_line_item_status(order_id, product_id, seller_id, new_status):
+        """Update the status of a specific line item."""
+        try:
+            rows_affected = app.db.execute('''
+                UPDATE orderitems
+                SET status = :new_status
+                WHERE order_id = :order_id AND product_id = :product_id AND seller_id = :seller_id
+            ''', order_id=order_id, product_id=product_id, seller_id=seller_id, new_status=new_status)
+            return rows_affected > 0
+        except Exception as e:
+            print(f"Error updating line item status: {e}")
+            return False
+        
+
+    @staticmethod
+    def get_line_items(order_id: int, seller_id: int = None) -> list[dict]:
+        """
+        Fetch all line items for a specific order. If seller_id is provided, filter by seller_id.
+        """
+        try:
+            query = '''
+                SELECT 
+                    product_id,
+                    quantity,
+                    unit_price,
+                    status
+                FROM orderitems
+                WHERE order_id = :order_id
+            '''
+            params = {"order_id": order_id}
+
+            # Add seller_id filter if provided
+            if seller_id is not None:
+                query += " AND seller_id = :seller_id"
+                params["seller_id"] = seller_id
+
+            rows = app.db.execute(query, **params)
+            
+            # Return as a list of dictionaries
+            return [
+                {
+                    "product_id": row[0],
+                    "quantity": row[1],
+                    "unit_price": row[2],
+                    "status": row[3],
+                }
+                for row in rows
+            ]
+        except Exception as e:
+            print(f"Error fetching line items: {e}")
+            return []
