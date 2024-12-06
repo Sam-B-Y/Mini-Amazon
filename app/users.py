@@ -275,7 +275,7 @@ def view_account():
     is_seller = User.is_seller(id)
     return render_template('account/main.html', title="View Account", is_seller=is_seller)
 
-
+  
 @bp.route('/user/<hashed_email>')
 def view_user(hashed_email):
     users = User.get_all()
@@ -299,10 +299,17 @@ def view_user(hashed_email):
                          seller_id=found_user.id)
 
     ratings = Review.get_seller_reviews(found_user.id)
+
+    if ratings:
+        total_rating = sum(review.rating for review in ratings)
+        average_rating = total_rating / len(ratings)
+    else:
+        average_rating = 0
+
     return render_template('view_seller.html', 
                          full_name=found_user.full_name,
                          email=found_user.email,
-                         seller_id=found_user.id, reviews=ratings, address=found_user.address)
+                         seller_id=found_user.id, reviews=ratings, address=found_user.address, average_rating=average_rating)
 
 @bp.route('/api/user/<int:user_id>/email')
 def get_user_email(user_id):
@@ -310,4 +317,3 @@ def get_user_email(user_id):
     if not email:
         return jsonify({'error': 'User not found'}), 404
     return jsonify({'email': email})
-
