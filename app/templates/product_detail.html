@@ -1,0 +1,104 @@
+<!-- Add this after the existing product details but before the reviews section -->
+<div class="sellers-section">
+  <h3>Available from Sellers</h3>
+  {% if sellers %}
+  <div class="sellers-list">
+    {% for seller in sellers %}
+    <div class="seller-card">
+      <div class="seller-info">
+        <h4>
+          <a href="/user/{{ seller.seller_id }}">{{ seller.seller_name }}</a>
+        </h4>
+        <div class="star-rating">
+          {% for i in range(1, 6) %} {% if seller.avg_rating >= i %}
+          <i class="fa fa-star filled"></i>
+          {% else %}
+          <i class="fa fa-star empty"></i>
+          {% endif %} {% endfor %}
+          <span>({{ seller.review_count }} reviews)</span>
+        </div>
+        <p class="price">${{ "%.2f"|format(seller.unit_price) }}</p>
+        <p>Available: {{ seller.quantity }}</p>
+        <form class="add-to-cart-form" data-seller-id="{{ seller.seller_id }}">
+          <input
+            type="number"
+            name="quantity"
+            min="1"
+            max="{{ seller.quantity }}"
+            value="1"
+          />
+          <button type="submit" class="add-to-cart-btn">
+            <i class="fa fa-shopping-basket"></i> Add to Cart
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-muted">No sellers currently have this item in stock.</p>
+  {% endif %}
+</div>
+
+<!-- Add this to your existing style section or create one if it doesn't exist -->
+<style>
+  .seller-card {
+    background-color: #fff;
+    transition: transform 0.2s;
+  }
+
+  .seller-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .seller-rating {
+    color: #666;
+    font-size: 0.9em;
+  }
+
+  .add-to-cart-form .input-group {
+    max-width: 250px;
+  }
+
+  .stars {
+    color: #ffc107;
+  }
+
+  .sellers-section {
+    margin-top: 20px;
+    padding: 20px;
+    background: #1c1c1e;
+    border-radius: 8px;
+  }
+
+  .sellers-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .seller-card {
+    background: #2c2c2e;
+    padding: 15px;
+    border-radius: 8px;
+    transition: transform 0.2s;
+  }
+
+  .seller-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .seller-info h4 {
+    margin-bottom: 10px;
+  }
+
+  .seller-info h4 a {
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .seller-info h4 a:hover {
+    color: #3498db;
+  }
+</style>

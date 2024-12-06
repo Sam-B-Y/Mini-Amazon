@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for, session
+from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for, session, abort
 from .models.product import Product, Category
 from .models.inventory import Inventory
 
@@ -96,9 +96,11 @@ def get_product(product_id):
     if not product:
         return jsonify({'error': 'Product not found'}), 404
     
+    sellers = Product.get_sellers_with_inventory(product_id)
+    
     reviews = Product.get_reviews(product_id)
     inventory = Inventory.get_stock(product_id)
-    return render_template('/products/product_detail.html', product=product, reviews=reviews, inventory=inventory)
+    return render_template('/products/product_detail.html', product=product, reviews=reviews, inventory=inventory, sellers=sellers)
 
 @bp.route('/products', methods=['POST'])
 def create_product():

@@ -248,6 +248,33 @@ FROM Products
         ''', limit=limit)
         return rows
 
+    @staticmethod
+    def get_sellers_with_inventory(product_id):
+        rows = app.db.execute('''
+            SELECT 
+                i.seller_id,
+                u.full_name AS seller_name,
+                i.quantity,
+                p.price,
+                COALESCE(AVG(r.rating), 0) as avg_rating,
+                COUNT(DISTINCT r.review_id) as review_count
+            FROM Inventory i
+            JOIN Users u ON i.seller_id = u.user_id
+            LEFT JOIN Reviews r ON r.seller_id = i.seller_id
+            JOIN Products p ON i.product_id = p.product_id
+            WHERE i.product_id = :product_id AND i.quantity > 0
+            GROUP BY i.seller_id, u.full_name, i.quantity, p.price
+            ORDER BY p.price ASC, avg_rating DESC
+        ''', product_id=product_id)
+        return [{
+            'seller_id': row[0],
+            'seller_name': row[1],
+            'quantity': row[2],
+            'unit_price': float(row[3]),
+            'avg_rating': float(row[4]),
+            'review_count': row[5]
+        } for row in rows]
+
 
 class Category:
     def __init__(self, category_name):
