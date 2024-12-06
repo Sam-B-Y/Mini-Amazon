@@ -21,7 +21,9 @@
         <div class="col-md-9">
           <div class="star-rating d-flex align-items-center">
             {% set average_rating = reviews | map(attribute='rating') | sum /
-            reviews | length if reviews else 0 %} {% for i in range(1, 6) %} {%
+            reviews | length if reviews else 0 %} 
+            
+            {% for i in range(1, 6) %} {%
             if average_rating >= i %}
             <i class="fa fa-star filled"></i>
             {% elif average_rating > i - 1 %} 
@@ -34,7 +36,7 @@
         </div>
       </div>
     </div>
-
+    
     <button class="btn btn-primary mb-3" onclick="openReviewModal('{{ seller_id }}', '{{ full_name }}')">Leave a Review</button>
 
     <section class="reviews-section">
@@ -106,13 +108,6 @@
 
   .star-rating .fa-star {
     font-size: 2rem;
-    color: #ddd;
-    cursor: pointer;
-    margin-right: 0.5rem;
-  }
-
-  .star-rating .fa-star.checked {
-    color: #ffc107;
   }
 
   .card {

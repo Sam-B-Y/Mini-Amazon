@@ -246,7 +246,7 @@ def view_account():
     return render_template('account/main.html', title="View Account")
 
                         
-@bp.route('/user/<id>')
+@bp.route('/user/<int:id>')
 def view_user(id):
     user = User.get(id)
     
@@ -256,16 +256,29 @@ def view_user(id):
     is_seller = User.is_seller(id)
 
     if not is_seller:
+        # Existing code for non-seller users
         return render_template('view_user.html', 
-                         full_name=user.full_name,
-                         email=user.email, id=user.id)
-
+                               full_name=user.full_name,
+                               email=user.email, 
+                               id=user.id)
+    
+    # If the user is a seller, get their reviews
     ratings = Review.get_seller_reviews(id)
-        
+    
+    # Calculate average rating
+    if ratings:
+        total_rating = sum(review.rating for review in ratings)
+        average_rating = total_rating / len(ratings)
+    else:
+        average_rating = 0
+
     return render_template('view_seller.html', 
-                         full_name=user.full_name,
-                         email=user.email,
-                         seller_id=user.id, reviews=ratings, address=user.address)
+                           full_name=user.full_name,
+                           email=user.email,
+                           seller_id=user.id, 
+                           reviews=ratings,
+                           address=user.address,
+                           average_rating=average_rating)
 
 @bp.route('/api/user/<int:user_id>/email')
 def get_user_email(user_id):
@@ -273,22 +286,3 @@ def get_user_email(user_id):
     if not email:
         return jsonify({'error': 'User not found'}), 404
     return jsonify({'email': email})
-
-@bp.route('/user/<int:user_id>')
-def view_seller(user_id):
-    seller = User.get(user_id)
-    if not seller:
-        flash('Seller not found')
-        return redirect(url_for('index.index'))
-
-    # Get all reviews for this seller
-    reviews = Review.get_seller_reviews(user_id)
-
-    # Calculate average rating
-    if reviews:
-        total_rating = sum(review.rating for review in reviews)
-        average_rating = total_rating / len(reviews)
-    else:
-        average_rating = 0
-
-    return render_template('view_seller.html', seller=seller, reviews=reviews, average_rating=average_rating)
