@@ -94,21 +94,28 @@ WHERE user_id = :user_id
     @staticmethod
     def get_product_history(user_id, page=1, per_page=10):
         offset = (page - 1) * per_page
+
+        # get name, description, category_name, ordered_time, image_url, quantity, price, seller_id, product_id then group by order_id
         rows = app.db.execute('''
-            SELECT name, description, category_name, ordered_time, image_url, quantity, price, seller_id, Orders.order_id, Products.product_id, Orders.status
-            FROM OrderItems
-            JOIN Orders ON Orders.order_id = OrderItems.order_id
-            JOIN Products ON Products.product_id = OrderItems.product_id                              
-            WHERE user_id = :user_id
-            ORDER BY ordered_time DESC
+            SELECT 
+                o.order_id, o.ordered_time, o.status, 
+                i.product_id, i.seller_id, i.quantity, p.price, p.name, p.description, p.image_url, p.category_name
+            FROM Orders o
+            JOIN OrderItems i ON o.order_id = i.order_id
+            JOIN Products p ON i.product_id = p.product_id
+            WHERE o.user_id = :user_id
+            ORDER BY o.ordered_time DESC
             LIMIT :per_page OFFSET :offset
         ''', user_id=user_id, per_page=per_page, offset=offset)
 
         total_items = app.db.execute('''
-            SELECT COUNT(*) FROM OrderItems
-            JOIN Orders ON Orders.order_id = OrderItems.order_id
-            WHERE user_id = :user_id
+            SELECT COUNT(DISTINCT o.order_id)
+            FROM Orders o
+            JOIN OrderItems i ON o.order_id = i.order_id
+            JOIN Products p ON i.product_id = p.product_id
+            WHERE o.user_id = :user_id
         ''', user_id=user_id)[0][0]
+
 
         return {
             "rows": rows,

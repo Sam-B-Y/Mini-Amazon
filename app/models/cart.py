@@ -205,7 +205,8 @@ class Cart:
             for coupon_id, discount in user_coupons:
                 total_after_coupons -= total_after_coupons * discount / 100
 
-            
+            total_after_coupons = round(total_after_coupons, 2)
+
             if user_balance < total_after_coupons:
                 print("User does not have enough balance.")
                 return "Insufficient balance."
