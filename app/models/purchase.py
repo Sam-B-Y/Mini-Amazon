@@ -32,42 +32,50 @@ ORDER BY ordered_time DESC
                               user_id=user_id,
                               since=since)
         return [Purchase(*row) for row in rows]
-
+    
     @staticmethod
     def get_orders_by_seller(seller_id: int, search_query: str = "", status_filter: str = "") -> list[dict]:
         rows = app.db.execute('''
-        SELECT 
-            oi.order_id,
-            oi.quantity,
-            oi.unit_price,
-            o.ordered_time,
-            u.full_name AS buyer_name,
-            u.address AS buyer_address,
-            o.status AS order_status
-        FROM orderitems oi
-        JOIN orders o ON oi.order_id = o.order_id
-        JOIN users u ON o.user_id = u.user_id
-        WHERE oi.seller_id = :seller_id
-        AND (
-            o.order_id::TEXT ILIKE :search_query OR
-            u.full_name ILIKE :search_query OR
-            u.address ILIKE :search_query
-        )
-        ORDER BY o.ordered_time DESC;
+            SELECT 
+                oi.order_id,
+                SUM(oi.quantity) AS total_quantity,  -- Aggregate quantity
+                SUM(oi.unit_price * oi.quantity) AS total_price,  -- Aggregate total price
+                o.ordered_time,
+                u.full_name AS buyer_name,
+                u.address AS buyer_address,
+                o.status AS order_status,
+                u.user_id AS buyer_id,
+                -- Check if all order_items for the order are complete
+                CASE WHEN COUNT(oi.status) FILTER (WHERE oi.status != 'Complete') = 0 THEN TRUE ELSE FALSE END AS completion_status
+            FROM orderitems oi
+            JOIN orders o ON oi.order_id = o.order_id
+            JOIN users u ON o.user_id = u.user_id
+            WHERE oi.seller_id = :seller_id
+            AND (
+                o.order_id::TEXT ILIKE :search_query OR
+                u.full_name ILIKE :search_query OR
+                u.address ILIKE :search_query
+            )
+            GROUP BY oi.order_id, o.ordered_time, u.full_name, u.address, o.status, u.user_id
+            ORDER BY o.ordered_time DESC;
         ''', seller_id=seller_id, search_query=f"%{search_query}%")
 
         return [
             {
                 "order_id": row[0],
                 "quantity": row[1],
-                "unit_price": row[2],
+                "total_price": row[2],  # Total price from aggregation
                 "ordered_time": row[3],
                 "buyer_name": row[4],
                 "buyer_address": row[5],
                 "order_status": row[6],
+                "buyer_id": row[7],
+                "completion_status": row[8],  # True if all related order_items are complete
             }
             for row in rows if status_filter == "" or row[6] == status_filter
         ]
+
+
 
 
     @staticmethod
@@ -91,3 +99,103 @@ ORDER BY ordered_time DESC
             print(f"Error marking order as complete: {e}")
             return False
 
+    @staticmethod
+    def get_line_item_status(order_id, product_id, seller_id):
+        """Fetch the current status of a specific line item."""
+        rows = app.db.execute('''
+            SELECT status
+            FROM orderitems
+            WHERE order_id = :order_id AND product_id = :product_id AND seller_id = :seller_id
+        ''', order_id=order_id, product_id=product_id, seller_id=seller_id)
+        
+        return rows[0][0] if rows else None
+
+
+    @staticmethod
+    def mark_line_item_complete(order_id, product_id, seller_id):
+        """Mark a specific line item as complete."""
+        rows_affected = app.db.execute('''
+            UPDATE orderitems
+            SET status = 'Complete'
+            WHERE order_id = :order_id AND product_id = :product_id AND seller_id = :seller_id
+        ''', order_id=order_id, product_id=product_id, seller_id=seller_id)
+
+        return rows_affected > 0
+    
+
+    @staticmethod
+    def update_order_status_if_complete(order_id):
+        """Check if all items in the order are complete and update the order's status."""
+        try:
+            # Check if all items for the given order_id are marked as 'Complete'
+            rows = app.db.execute('''
+                SELECT COUNT(*)
+                FROM orderitems
+                WHERE order_id = :order_id AND status != 'Complete'
+            ''', order_id=order_id)
+
+            # If no items are pending, mark the order as 'Complete'
+            if rows[0][0] == 0:
+                app.db.execute('''
+                    UPDATE orders
+                    SET status = 'Complete'
+                    WHERE order_id = :order_id
+                ''', order_id=order_id)
+                return True  # Indicate that the order was marked as complete
+            return False  # Indicate that the order remains incomplete
+        except Exception as e:
+            print(f"Error updating order status: {e}")
+            return False
+
+    @staticmethod
+    def update_line_item_status(order_id, product_id, seller_id, new_status):
+        """Update the status of a specific line item."""
+        try:
+            rows_affected = app.db.execute('''
+                UPDATE orderitems
+                SET status = :new_status
+                WHERE order_id = :order_id AND product_id = :product_id AND seller_id = :seller_id
+            ''', order_id=order_id, product_id=product_id, seller_id=seller_id, new_status=new_status)
+            return rows_affected > 0
+        except Exception as e:
+            print(f"Error updating line item status: {e}")
+            return False
+        
+
+    @staticmethod
+    def get_line_items(order_id: int, seller_id: int = None) -> list[dict]:
+        """
+        Fetch all line items for a specific order. If seller_id is provided, filter by seller_id.
+        """
+        try:
+            query = '''
+                SELECT 
+                    product_id,
+                    quantity,
+                    unit_price,
+                    status
+                FROM orderitems
+                WHERE order_id = :order_id
+            '''
+            params = {"order_id": order_id}
+
+            # Add seller_id filter if provided
+            if seller_id is not None:
+                query += " AND seller_id = :seller_id"
+                params["seller_id"] = seller_id
+
+            rows = app.db.execute(query, **params)
+            
+            # Return as a list of dictionaries
+            return [
+                {
+                    "product_id": row[0],
+                    "quantity": row[1],
+                    "unit_price": row[2],
+                    "status": row[3],
+                }
+                for row in rows
+            ]
+        except Exception as e:
+            print(f"Error fetching line items: {e}")
+            return []

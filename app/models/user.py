@@ -150,7 +150,7 @@ FROM Users
             LEFT JOIN Reviews r ON r.product_id = i.product_id
             WHERE i.seller_id = :user_id
         ''', user_id=user_id)
-        return rows[0] if rows else None
+        return rows[0] if None not in rows[0] else None
     
     @staticmethod
     def save(self):
@@ -159,4 +159,11 @@ FROM Users
     SET email = :email, full_name = :full_name, address = :address, balance = :balance
     WHERE user_id = :user_id
     ''', user_id=self.id, email=self.email, full_name=self.full_name, address=self.address, balance=self.balance)
+        
+    def become_seller(user_id):
+        app.db.execute('''
+            UPDATE Users
+            SET is_seller = TRUE
+            WHERE user_id = :user_id
+        ''', user_id=user_id)
     
