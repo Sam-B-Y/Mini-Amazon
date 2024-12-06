@@ -12,9 +12,9 @@ class Purchase:
     def get(order_id):
         rows = app.db.execute('''
 SELECT order_id, user_id, product_id, ordered_time
-FROM OrderItems
-JOIN Orders ON Orders.order_id = OrderItems.order_id
-WHERE OrderItems.order_id = :order_id
+FROM orderitems
+JOIN orders ON orders.order_id = orderitems.order_id
+WHERE orderitems.order_id = :order_id
 ''',
                               order_id=order_id)
         return Purchase(*(rows[0])) if rows else None
@@ -22,9 +22,9 @@ WHERE OrderItems.order_id = :order_id
     @staticmethod
     def get_all_by_user_id_since(user_id: int, since: str) -> list['Purchase']:
         rows = app.db.execute('''
-SELECT OrderItems.order_id, user_id, product_id, ordered_time
-FROM OrderItems
-JOIN Orders ON Orders.order_id = OrderItems.order_id
+SELECT orderitems.order_id, user_id, product_id, ordered_time
+FROM orderitems
+JOIN orders ON orders.order_id = orderitems.order_id
 WHERE user_id = :user_id
 AND ordered_time >= :since
 ORDER BY ordered_time DESC
@@ -44,9 +44,9 @@ ORDER BY ordered_time DESC
             u.full_name AS buyer_name,
             u.address AS buyer_address,
             o.status AS order_status
-        FROM OrderItems oi
-        JOIN Orders o ON oi.order_id = o.order_id
-        JOIN Users u ON o.user_id = u.user_id
+        FROM orderitems oi
+        JOIN orders o ON oi.order_id = o.order_id
+        JOIN users u ON o.user_id = u.user_id
         WHERE oi.seller_id = :seller_id
         AND (
             o.order_id::TEXT ILIKE :search_query OR
@@ -75,12 +75,12 @@ ORDER BY ordered_time DESC
         try:
             # Execute the update query
             rows_affected = app.db.execute('''
-            UPDATE Orders
+            UPDATE orders
             SET status = 'Complete'
             WHERE order_id = :order_id
             AND order_id IN (
                 SELECT DISTINCT order_id
-                FROM OrderItems
+                FROM orderitems
                 WHERE seller_id = :seller_id
             )
             ''', order_id=order_id, seller_id=seller_id)

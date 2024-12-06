@@ -217,6 +217,38 @@ FROM Products
             'sellers': sellers
         }
 
+    @staticmethod
+    def get_top_selling_products(limit=10):
+        rows = app.db.execute('''
+            SELECT 
+                p.product_id, 
+                p.category_name, 
+                p.name, 
+                p.description, 
+                p.image_url, 
+                p.price, 
+                p.created_by,
+                COALESCE(AVG(r.rating), -1) as avg_review_score,
+                COUNT(DISTINCT r.review_id) as review_count
+            FROM Products p
+            LEFT JOIN Reviews r ON p.product_id = r.product_id
+            GROUP BY 
+                p.product_id, 
+                p.category_name, 
+                p.name, 
+                p.description, 
+                p.image_url, 
+                p.price, 
+                p.created_by
+            HAVING COUNT(DISTINCT r.review_id) >= 3  -- Only products with at least 3 reviews
+            ORDER BY 
+                COALESCE(AVG(r.rating), -1) DESC,    -- Highest rated first
+                COUNT(DISTINCT r.review_id) DESC      -- Then by number of reviews
+            LIMIT :limit
+        ''', limit=limit)
+        return rows
+
+
 class Category:
     def __init__(self, category_name):
         self.category_name = category_name

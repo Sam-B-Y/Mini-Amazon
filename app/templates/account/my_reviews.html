@@ -75,17 +75,23 @@
           const reviewElement = document.createElement("div");
           reviewElement.classList.add("card", "mb-4");
           reviewElement.innerHTML = `
-            <p>Product: <a href="/products/${review.product_id}">${review.product_name}</a></p>
-            <p>Seller: <a href="/seller/${review.seller_id}">${review.seller_name}</a></p>
-            <div class="card-body">
+            <div class="card-body"><p>Product: <a href="/products/${
+              review.product_id
+            }">${review.product_name}</a></p>
               <h5 class="card-title">Rating: ${renderStars(review.rating)}</h5>
               <p class="card-text">Comment: ${review.comment}</p>
               <p class="text-muted">Added at: ${review.timestamp}</p>
+            
+            <p>Seller: <a href="/seller/${review.seller_id}">${
+            review.seller_name
+          }</a></p>
               
               <div class="d-flex justify-content-end">
                 <button
                   class="btn btn-warning btn-sm me-2"
-                  onclick="openEditReviewModal(${review.id}, '${review.rating}', '${review.comment}')"
+                  onclick="openEditReviewModal(${review.id}, '${
+            review.rating
+          }', '${review.comment}')"
                 >
                   <i class="fa fa-edit"></i> Edit
                 </button>

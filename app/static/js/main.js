@@ -177,4 +177,13 @@ document.addEventListener("DOMContentLoaded", function () {
   if (chatbotWindow.style.display === "flex") {
     loadChatHistory();
   }
+
+  function scrollSlider(sliderId, direction) {
+    const slider = document.getElementById(`${sliderId}-slider`);
+    const scrollAmount = direction * 250; // Width of one product card
+    slider.scrollBy({
+      left: scrollAmount,
+      behavior: "smooth",
+    });
+  }
 });
