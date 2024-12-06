@@ -14,17 +14,21 @@ def seller_orders():
         search_query = request.args.get('search', "")
         status_filter = request.args.get('status', "")
 
-
         if status_filter == "All":
             orders = Purchase.get_orders_by_seller(seller_id, search_query)
         else:
             orders = Purchase.get_orders_by_seller(seller_id, search_query, status_filter)
+
+        # Ensure orders are sorted by 'order_id'
+        orders = sorted(orders, key=lambda x: x['order_id'])
 
         return jsonify({"orders": orders}), 200
 
     except Exception as e:
         print(f"Error fetching seller orders: {e}")
         return jsonify({"error": "An unexpected error occurred."}), 500
+
+
 
 @bp.route('/api/mark_complete', methods=['POST'])
 def mark_order_complete():
