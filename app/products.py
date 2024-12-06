@@ -103,16 +103,21 @@ def get_product(product_id):
 @bp.route('/products', methods=['POST'])
 def create_product():
     data = request.get_json()
-    product = Product.create(
+    user_id = request.cookies.get('id')
+    product = Inventory.add(
         category_name=data['category_name'],
         name=data['name'],
         description=data['description'],
         image_url=data['image_url'],
         price=float(data['price']),
-        created_by=data['created_by']
+        user_id=user_id,
+        quantity=data['quantity']
     )
-    if product:
-        return jsonify(product.to_dict()), 201
+    if product[0]:
+        product_id = product[1]
+        product_obj = Product.get(product_id)
+        print(product_obj)
+        return jsonify(product_obj.to_dict()), 201
     return jsonify({'error': 'Failed to create product'}), 400
 
 @bp.route('/products/<int:product_id>', methods=['PUT'])

@@ -43,7 +43,8 @@ ORDER BY ordered_time DESC
             o.ordered_time,
             u.full_name AS buyer_name,
             u.address AS buyer_address,
-            o.status AS order_status
+            o.status AS order_status,
+            u.user_id AS buyer_id
         FROM orderitems oi
         JOIN orders o ON oi.order_id = o.order_id
         JOIN users u ON o.user_id = u.user_id
@@ -65,6 +66,7 @@ ORDER BY ordered_time DESC
                 "buyer_name": row[4],
                 "buyer_address": row[5],
                 "order_status": row[6],
+                "buyer_id": row[7]
             }
             for row in rows if status_filter == "" or row[6] == status_filter
         ]

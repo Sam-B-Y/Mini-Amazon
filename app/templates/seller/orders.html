@@ -79,7 +79,9 @@
               <span class="badge ${badgeClass}">${order.order_status}</span>
             </div>
             <div class="card-body">
-              <p><strong>Buyer:</strong> ${order.buyer_name}</p>
+              <p><strong>Buyer:</strong> <button class="btn btn-link" onclick="redirectToSellerPage('${order.buyer_id}')">
+                    ${order.buyer_name}
+                  </button></p>
               <p><strong>Address:</strong> ${order.buyer_address}</p>
               <p><strong>Date:</strong> ${new Date(
                 order.ordered_time

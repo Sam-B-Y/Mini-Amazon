@@ -125,20 +125,22 @@
 <div class="container" style="text-align: center; margin-top: 50px">
   <h2>Seller Information</h2>
   <div class="row" style="margin-top: 50px">
-    <!-- Seller Stats -->
-    <div class="col-md-3">
-      <div class="card text-dark bg-white mb-3">
-        <div class="card-header">Total Sales</div>
-        <div class="card-body">
-          <h5 class="card-title">${{ seller_stats.total_sales }}</h5>
+    {% if seller_stats is not none%}
+      <!-- Seller Stats -->
+      <div class="col-md-3">
+        <div class="card text-dark bg-white mb-3">
+          <div class="card-header">Total Sales</div>
+          <div class="card-body">
+            <h5 class="card-title">${{ seller_stats.total_sales }}</h5>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-dark bg-white mb-3">
-        <div class="card-header">Total Orders</div>
-        <div class="card-body">
-          <h5 class="card-title">{{ seller_stats.total_orders }}</h5>
+      <div class="col-md-3">
+        <div class="card text-dark bg-white mb-3">
+          <div class="card-header">Total Orders</div>
+          <div class="card-body">
+            <h5 class="card-title">{{ seller_stats.total_orders }}</h5>
+          </div>
         </div>
       </div>
     </div>
@@ -167,16 +169,16 @@
           {% endif %}
         </div>
       </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-dark bg-white mb-3">
-        <div class="card-header">Products Listed</div>
-        <div class="card-body">
-          <h5 class="card-title">{{ seller_stats.products_listed }}</h5>
+      <div class="col-md-3">
+        <div class="card text-dark bg-white mb-3">
+          <div class="card-header">Products Listed</div>
+          <div class="card-body">
+            <h5 class="card-title">{{ seller_stats.products_listed }}</h5>
+          </div>
         </div>
       </div>
+    {% endif %}
     </div>
-  </div>
 
   <div class="button-group" style="margin-top: 30px">
     <a
