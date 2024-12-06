@@ -1,4 +1,6 @@
 from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for, session
+from flask_login import current_user, login_required
+
 from .models.product import Product, Category
 from .models.inventory import Inventory
 
@@ -61,11 +63,12 @@ def search_existing_product():
 
 
 @bp.route('/products/create_listing', methods=['POST'])
+@login_required
 def create_listing():
     """
     Create a listing for an existing product.
     """
-    user_id = request.cookies.get('id')    # Automatically fetch user_id from session
+    user_id = current_user.id    # Automatically fetch user_id from session
 
     # Validate that the user is logged in
     if not user_id:
@@ -101,9 +104,10 @@ def get_product(product_id):
     return render_template('/products/product_detail.html', product=product, reviews=reviews, inventory=inventory)
 
 @bp.route('/products', methods=['POST'])
+@login_required
 def create_product():
     data = request.get_json()
-    user_id = request.cookies.get('id')
+    user_id = current_user.id  
     product = Inventory.add(
         category_name=data['category_name'],
         name=data['name'],
@@ -121,6 +125,7 @@ def create_product():
     return jsonify({'error': 'Failed to create product'}), 400
 
 @bp.route('/products/<int:product_id>', methods=['PUT'])
+@login_required
 def update_product(product_id):
     data = request.get_json()
 
@@ -138,11 +143,13 @@ def update_product(product_id):
     return jsonify({'error': 'Failed to update product'}), 400
 
 @bp.route('/products/create', methods=['GET'])
+@login_required
 def create_product_form():
     categories = Category.get_all()
     return render_template('product_create.html', categories=categories)
 
 @bp.route('/products/<int:product_id>/edit', methods=['GET'])
+@login_required
 def edit_product_form(product_id):
     product = Product.get(product_id)
     if not product:

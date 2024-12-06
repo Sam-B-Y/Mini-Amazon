@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request, make_response
 from werkzeug.urls import url_parse
 from flask import jsonify
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user, current_user, login_required
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
@@ -85,12 +85,15 @@ def register():
 @bp.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('index.index'))
+    redirect_response = make_response(redirect(url_for('index.index')))
+    redirect_response.set_cookie("id", "", expires=0)
+    return redirect_response
 
 
 @bp.route('/add_funds', methods=['POST'])
+@login_required
 def add_funds():
-    id = int(request.cookies.get("id"))
+    id = current_user.id
     user = User.get(id)
     
     if user is None:
@@ -107,8 +110,9 @@ def add_funds():
     return redirect(url_for('users.edit_account'))
 
 @bp.route('/withdraw_funds', methods=['POST'])
+@login_required
 def withdraw_funds():
-    id = int(request.cookies.get("id"))
+    id = current_user.id
     user = User.get(id)
 
     user.balance = float(user.balance)
@@ -131,8 +135,9 @@ def withdraw_funds():
     return redirect(url_for('users.edit_account'))
 
 @bp.route('/edit_account', methods=['GET', 'POST'])
+@login_required
 def edit_account():
-    id = int(request.cookies.get("id"))
+    id = current_user.id
     user = User.get(id)
 
     if user is None:
@@ -169,8 +174,9 @@ def edit_account():
                            email=user.email)
 
 @bp.route('/purchase_history', methods=['GET'])
+@login_required
 def purchase_history():
-    id = int(request.cookies.get("id"))
+    id = current_user.id
     user = User.get(id)
 
     if user is None:
@@ -187,8 +193,9 @@ def purchase_history():
     return render_template('account/purchases.html', title="Purchase History", order_history=order_history, page=page, total_pages=total_pages)
 
 @bp.route('/become_seller', methods=['GET'])
+@login_required
 def become_seller():
-    id = int(request.cookies.get("id"))
+    id = current_user.id
     user = User.get(id)
 
     if user is None:
@@ -201,8 +208,9 @@ def become_seller():
     return redirect(url_for('users.view_account'))
 
 @bp.route('/seller_profile', methods=['GET'])
+@login_required
 def seller_profile():
-    id = int(request.cookies.get("id"))
+    id = current_user.id
     user = User.get(id)
 
     if user is None:
@@ -221,8 +229,9 @@ def seller_profile():
     return render_template('seller/main.html', title="Seller Profile", seller_stats=stats)
 
 @bp.route('/view_orders', methods=['GET'])
+@login_required
 def view_orders():
-    id = int(request.cookies.get("id"))
+    id = current_user.id
     user = User.get(id)
 
     if user is None:
@@ -236,8 +245,9 @@ def view_orders():
     return render_template('seller/orders.html', title="View Orders")
 
 @bp.route('/view_inventory', methods=['GET'])
+@login_required
 def view_inventory():
-    id = int(request.cookies.get("id"))
+    id = current_user.id
     user = User.get(id)
 
     if user is None:
@@ -253,8 +263,9 @@ def view_inventory():
 
 
 @bp.route('/account', methods=['GET'])
+@login_required
 def view_account():
-    id = int(request.cookies.get("id"))
+    id = current_user.id
     user = User.get(id)
 
     if user is None:
