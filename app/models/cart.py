@@ -51,15 +51,15 @@ class Cart:
         try:
             row = app.db.execute("""
                 SELECT quantity FROM CartItems 
-                WHERE user_id = :user_id AND product_id = :product_id
-            """, user_id=user_id, product_id=product_id)
+                WHERE user_id = :user_id AND product_id = :product_id AND seller_id = :seller_id
+            """, user_id=user_id, product_id=product_id, seller_id=seller_id)
             if row:
-                new_quantity = row.quantity + quantity
+                new_quantity = row[0][0] + quantity
                 app.db.execute("""
                     UPDATE CartItems
                     SET quantity = :quantity
-                    WHERE user_id = :user_id AND product_id = :product_id
-                """, quantity=new_quantity, user_id=user_id, product_id=product_id)
+                    WHERE user_id = :user_id AND product_id = :product_id AND seller_id = :seller_id
+                """, quantity=new_quantity, user_id=user_id, product_id=product_id, seller_id=seller_id)
             else:
                 app.db.execute("""
                     INSERT INTO CartItems(user_id, product_id, seller_id, quantity)
@@ -197,15 +197,17 @@ class Cart:
             total_after_coupons = total_cost
 
             user_coupons = app.db.execute("""
-                SELECT coupon_id, discount
-                FROM AppliedCoupons
-                WHERE user_id = :user_id AND cart = TRUE
+                SELECT ac.coupon_id, c.discount
+                FROM AppliedCoupons ac
+                JOIN Coupons c ON ac.coupon_id = c.coupon_id
+                WHERE ac.user_id = :user_id AND ac.cart = TRUE
             """, user_id=user_id)
 
             for coupon_id, discount in user_coupons:
                 total_after_coupons -= total_after_coupons * discount / 100
 
-            
+            total_after_coupons = round(total_after_coupons, 2)
+
             if user_balance < total_after_coupons:
                 print("User does not have enough balance.")
                 return "Insufficient balance."

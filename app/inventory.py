@@ -113,3 +113,17 @@ def update_quantity():
         print(f"Error updating quantity: {e}")
         return jsonify({"error": "An unexpected error occurred"}), 500
 
+
+@bp.route('/api/product_sales', methods=['GET'])
+def get_product_sales():
+    user_id = request.args.get('user_id')
+
+    if not user_id:
+        return jsonify({"error": "User ID is required"}), 400
+
+    try:
+        sales_data = Inventory.get_completed_sales_by_product(user_id)
+        return jsonify({"sales_data": sales_data})
+    except Exception as e:
+        print(f"Error fetching product sales: {e}")
+        return jsonify({"error": "An unexpected error occurred."}), 500

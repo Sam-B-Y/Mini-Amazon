@@ -9,6 +9,7 @@ from hashlib import sha256
 from flask import abort
 
 from .models.user import User
+from .models.coupon import Coupon
 from .models.review import Review
 from .forms.inventory_form import InventoryForm
 
@@ -187,10 +188,36 @@ def purchase_history():
     per_page = 10
 
     order_history_data = User.get_product_history(id, page=page, per_page=per_page)
+
     order_history = order_history_data["rows"]
     total_pages = order_history_data["pages"]
 
-    return render_template('account/purchases.html', title="Purchase History", order_history=order_history, page=page, total_pages=total_pages)
+    orders = []
+    current_order = None
+    for order_item in order_history:
+        if current_order is None or current_order["order_id"] != order_item[0]:
+            current_order = {
+                "order_id": order_item[0],
+                "ordered_time": order_item[1],
+                "status": order_item[2],
+                "items": [],
+                "price": 0,
+                "coupons": Coupon.get_order_coupons(order_item[0])
+            }
+            orders.append(current_order)
+
+        current_order["items"].append(order_item)
+        
+        current_order["price"] += order_item[6] * order_item[5]
+
+    for order in orders:
+        order['final_price'] = order['price']
+        for coupon in order['coupons']:
+            order['final_price'] -= order['price'] * coupon.discount
+
+        order['final_price'] = round(order['final_price'], 2)
+
+    return render_template('account/purchases.html', title="Purchase History", orders=orders, page=page, total_pages=total_pages)
 
 @bp.route('/become_seller', methods=['GET'])
 @login_required
@@ -275,19 +302,11 @@ def view_account():
     is_seller = User.is_seller(id)
     return render_template('account/main.html', title="View Account", is_seller=is_seller)
 
-  
-@bp.route('/user/<hashed_email>')
-def view_user(hashed_email):
-    users = User.get_all()
-    found_user = None
-    
-    for user in users:
-        user_hash = sha256(user.email.encode()).hexdigest()
-        if user_hash == hashed_email:
-            found_user = user
-            break
-    
-    if not found_user:
+
+@bp.route('/user/<int:user_id>')
+def view_user(user_id):
+    found_user = User.get(user_id)
+    if found_user is None:
         abort(404)
 
     is_seller = User.is_seller(found_user.id)
@@ -311,9 +330,3 @@ def view_user(hashed_email):
                          email=found_user.email,
                          seller_id=found_user.id, reviews=ratings, address=found_user.address, average_rating=average_rating)
 
-@bp.route('/api/user/<int:user_id>/email')
-def get_user_email(user_id):
-    email = User.get_email_from_id(user_id)
-    if not email:
-        return jsonify({'error': 'User not found'}), 404
-    return jsonify({'email': email})

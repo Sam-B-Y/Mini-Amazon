@@ -1,70 +1,43 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
+{% block content %}
 <div class="product-detail-container">
   <div class="product-main">
-    <img
-      src="{{ product.image_url }}"
-      alt="{{ product.name }}"
-      class="product-image"
-    />
+    <img src="{{ product.image_url }}" alt="{{ product.name }}" class="product-image" />
     <div class="product-info">
       <h1>{{ product.name }}</h1>
       <p class="price">${{ "%.2f"|format(product.price) }}</p>
       <p class="category">
         Category:
-        <a href="/category/{{product.category_name}}"
-          >{{ product.category_name }}</a
-        >
+        <a href="/category/{{product.category_name}}">{{ product.category_name }}</a>
         <br>
-Sold by: <a href="/user/{{ inventory.seller_id }}">{{ inventory.seller_name }}</a> <br> Available Quantity: {{ inventory.quantity }}
+        
+Sold by: <button class="btn btn-link" onclick="redirectToSellerPage('{{ inventory.seller_id }}')">
+  {{ inventory.seller_name }}
+</button> <br> Available Quantity: {{ inventory.quantity }}
       </p>
       <p class="rating">
-        <div class="star-rating">
-          {% set average_rating = reviews | map(attribute='rating') | sum / reviews | length if reviews else 0 %}
-          {% for i in range(1, 6) %} {% if average_rating >= i %}
-          <i class="fa fa-star filled"></i>
-          {% elif average_rating > i - 1 %}
-          <i
-            class="fa fa-star filled fractional"
-            style="--fraction-width: {{ (average_rating - (i - 1)) * 100 }}%;"
-          ></i>
-          {% else %}
-          <i class="fa fa-star empty"></i>
-          {% endif %} {% endfor %}
+      <div class="star-rating">
+        {% set average_rating = reviews | map(attribute='rating') | sum / reviews|length if reviews else 0 %}
+        {% for i in range(1, 6) %}
+        {% if average_rating >= i %}
+        <i class="fa fa-star filled"></i>
+        {% elif average_rating > i - 1 %}
+        <i class="fa fa-star filled fractional" style="--fraction-width: {{ (average_rating - (i - 1)) * 100 }}%;"></i>
+        {% else %}
+        <i class="fa fa-star empty"></i>
+        {% endif %}
+        {% endfor %}
         <span style="font-size: medium;">({{ reviews|length if reviews else 0 }} ratings)</span>
-        </div>
+      </div>
       </p>
-    </div>
-  </div>
-
-  <p class="description">{{ product.description }}</p>
-
-  <!-- Sellers Section -->
-  <div class="sellers-section">
-    <h3>Available from Sellers</h3>
-    {% if sellers %}
-    <div class="sellers-list">
-      {% for seller in sellers %}
-      <div class="seller-card">
-        <div class="seller-info">
-          <h4><a href="/user/{{ seller.seller_id }}">{{ seller.seller_name }}</a></h4>
-          <div class="star-rating">
-            {% for i in range(1, 6) %}
-              {% if seller.avg_rating >= i %}
-                <i class="fa fa-star filled"></i>
-              {% else %}
-                <i class="fa fa-star empty"></i>
-              {% endif %}
-            {% endfor %}
-            <span>({{ seller.review_count }} reviews)</span>
-          </div>
-          <p class="price">${{ "%.2f"|format(seller.unit_price) }}</p>
-          <p>Available: {{ seller.quantity }}</p>
-          <form class="add-to-cart-form" data-seller-id="{{ seller.seller_id }}">
-            <input type="number" name="quantity" min="1" max="{{ seller.quantity }}" value="1" />
-            <button type="submit" class="add-to-cart-btn">
-              <i class="fa fa-shopping-basket"></i> Add to Cart
-            </button>
-          </form>
+      <div class="sellers-section">
+        <div class="sellers-list">
+              <form class="add-to-cart-form" data-seller-id="{{ inventory.seller_id }}">
+                <input type="number" name="quantity" min="1" max="{{ inventory.quantity }}" value="1" />
+                <button type="submit" class="add-to-cart-btn">
+  <i class="fa fa-shopping-basket"></i> Add to Cart
+</button>
+              </form>
         </div>
       </div>
       {% endfor %}
@@ -74,33 +47,43 @@ Sold by: <a href="/user/{{ inventory.seller_id }}">{{ inventory.seller_name }}</
     {% endif %}
   </div>
 
-  <!-- Reviews Section -->
+  <p class="description">{{ product.description }}</p>
+
+
   <div class="reviews-section">
     <h2>Product Reviews</h2>
+    <!-- Dropdown for filtering reviews by rating -->
+    <label for="filter-rating">Filter by rating:</label>
+    <select id="filter-rating">
+      <option value="">All</option>
+      {% for i in range(1, 6) %}
+      <option value="{{ i }}">{{ i }} star{{ '' if i == 1 else 's' }}</option>
+      {% endfor %}
+    </select>
+
+    <!-- Message displayed when no reviews match the filter -->
+    <p id="no-reviews-message" style="display:none; margin-top:20px; color:#ccc;"></p>
+
     <div class="center-review">
-      {% if reviews %}
-        {% for review in reviews %}
-        <div class="card mb-3">
-          <div class="card-body">
-            <div class="d-flex align-items-center mb-2">
-              <div class="star-rating centered-stars">
-                {% for i in range(1, 6) %}
-                  {% if review.rating >= i %}
-                    <i class="fa fa-star filled"></i>
-                  {% else %}
-                    <i class="fa fa-star empty"></i>
-                  {% endif %}
-                {% endfor %}
-              </div>
-              <span class="ms-2">{{ review.reviewer_name }}</span>
+    {% if reviews %} {% for review in reviews %}
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-2">
+            <div class="star-rating centered-stars">
+              {% for i in range(1, 6) %} {% if review.rating >= i %}
+              <i class="fa fa-star filled"></i>
+              {% else %}
+              <i class="fa fa-star empty"></i>
+              {% endif %} {% endfor %}
             </div>
-            <p class="mb-1">{{ review.comment }}</p>
-            <small class="text-muted">Added at: {{ review.added_at }}</small>
+            <span class="ms-2">{{ review.reviewer_name }}</span>
           </div>
+          <p class="mb-1">{{ review.comment }}</p>
+          <small class="text-muted">Added at: {{ review.added_at }}</small>
         </div>
-        {% endfor %}
-      {% else %}
-        <p class="text-muted">No reviews yet.</p>
+      </div>
+      {% endfor %} {% else %}
+      <p class="text-muted">No reviews yet.</p>
       {% endif %}
     </div>
   </div>
@@ -112,40 +95,60 @@ Sold by: <a href="/user/{{ inventory.seller_id }}">{{ inventory.seller_name }}</
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(";").shift();
   };
-  
-  document.querySelectorAll(".add-to-cart-form").forEach((form) => {
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const sellerId = form.dataset.sellerId;
-      const quantity = form.querySelector('input[name="quantity"]').value;
+  document.addEventListener('DOMContentLoaded', function() {
+    const sellerSelect = document.getElementById('seller-select');
+    if (sellerSelect) {
+      sellerSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const maxQuantity = selectedOption.dataset.quantity;
+        const quantityInput = document.getElementById('quantity');
+        
+        quantityInput.max = maxQuantity;
+        if (parseInt(quantityInput.value) > maxQuantity) {
+          quantityInput.value = maxQuantity;
+        }
+      });
+    }
 
-      try {
-        const formData = new FormData();
-        formData.append("product_id", "{{ product.product_id }}");
-        formData.append("seller_id", sellerId);
-        formData.append("quantity", parseInt(quantity));
+    document.querySelectorAll(".add-to-cart-form").forEach((form) => {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const sellerId = form.querySelector('select[name="seller_id"]').value;
+        const quantity = form.querySelector('input[name="quantity"]').value;
 
-        const userId = getCookie("id");
-        if (!userId) {
-          alert("Need to login first");
+        if (!sellerId) {
+          alert("Please select a seller");
           return;
         }
-        else {
-          const response = await fetch("/cart/add", {
-            method: "POST",
-            body: formData,
-          });
 
-          if (response.ok) {
-            alert("Added to cart successfully!");
-          } else {
-            alert("Failed to add to cart. Please try again.");
+        try {
+          const formData = new FormData();
+          formData.append("product_id", "{{ product.product_id }}");
+          formData.append("seller_id", sellerId);
+          formData.append("quantity", parseInt(quantity));
+
+          const userId = getCookie("id");
+          if (!userId) {
+            alert("Need to login first");
+            return;
           }
+          else {
+            const response = await fetch("/cart/add", {
+              method: "POST",
+              body: formData,
+            });
+
+            if (response.ok) {
+              alert("Added to cart successfully!");
+            } else {
+              alert("Failed to add to cart. Please try again.");
+            }
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          alert("An error occurred. Please try again.");
         }
-      } catch (error) {
-        console.error("Error:", error);
-        alert("An error occurred. Please try again.");
-      }
+      });
     });
   });
 </script>
@@ -261,21 +264,5 @@ Sold by: <a href="/user/{{ inventory.seller_id }}">{{ inventory.seller_name }}</
     align-items: center;
   }
 
-  .reviews-section {
-    margin-top: 40px;
-  }
-
-  .star-rating .filled {
-    color: #f1c40f;
-  }
-
-  .star-rating .empty {
-    color: #666;
-  }
-
-  .star-rating span {
-    margin-left: 8px;
-    color: #666;
-  }
 </style>
 {% endblock %}

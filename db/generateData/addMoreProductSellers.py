@@ -62,6 +62,29 @@ def sanitize_and_filter_duplicates(file_path):
         writer.writeheader()
         writer.writerows(unique_rows)
 
+# Sanitize and filter duplicates based on `product_id` and `seller_id`
+def sanitize_and_filter_duplicates(file_path):
+    with open(file_path, mode="r") as infile:
+        reader = csv.DictReader(infile)
+        rows = list(reader)  # Read all rows into memory
+
+        # Sanitize and remove duplicates based on `product_id` and `seller_id`
+        seen = set()
+        unique_rows = []
+        for row in rows:
+            # Replace any carriage returns or newlines in fields
+            sanitized_row = {k: v.replace("\r", " ").replace("\n", " ") for k, v in row.items()}
+            key = (sanitized_row["product_id"], sanitized_row["seller_id"])  # Use product_id and seller_id as key
+            if key not in seen:
+                seen.add(key)
+                unique_rows.append(sanitized_row)
+
+    # Write sanitized and filtered rows back to the file
+    with open(file_path, mode="w", newline="") as outfile:
+        writer = csv.DictWriter(outfile, fieldnames=reader.fieldnames)
+        writer.writeheader()
+        writer.writerows(unique_rows)
+
 # Main script logic
 if __name__ == "__main__":
     # Step 1: Read the existing CSVs
@@ -88,4 +111,7 @@ if __name__ == "__main__":
     sanitize_and_filter_duplicates(inventory_csv_path)
 
     print(f"Sanitized and filtered duplicates in {inventory_csv_path}.")
+
+
+
 
