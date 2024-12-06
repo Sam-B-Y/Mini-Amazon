@@ -32,6 +32,8 @@ class Inventory:
     @staticmethod
     def add(user_id, category_name, name, description, image_url, price, quantity):
         try:
+            if not Inventory.category_exists(category_name):
+                Inventory.add_category(category_name)
             # Find the first empty product_id
             rows = app.db.execute('''
                 SELECT product_id + 1 AS next_id
@@ -67,11 +69,17 @@ class Inventory:
             seller_id=user_id, 
             product_id=next_product_id, 
             quantity=quantity)
+
+            print("PRODUCTKLSJDFKLSDJFKLDSJFKLJDSKLFJSDKLFJSDKLJFSDFLKJDSFLSDSDLKFJDSKLFJ\nSDLKFJDSKLFJ", app.db.execute('''
+            SELECT i.seller_id, i.quantity, i.product_id
+            FROM Inventory i
+            WHERE i.product_id = :product_id 
+        ''', product_id=next_product_id))
             
-            return True
+            return True, next_product_id
         except Exception as e:
             print(f"Error adding product and inventory: {e}")
-            return False
+            return False, None
         
     @staticmethod
     def category_exists(category_name):
@@ -109,7 +117,7 @@ class Inventory:
 
             return True
         except Exception as e:
-            logging.error(f"Error creating listing: {e}")
+            print(f"Error creating listing: {e}")
             return False
 
         
@@ -131,8 +139,11 @@ class Inventory:
             JOIN Users u ON i.seller_id = u.user_id
             WHERE i.product_id = :product_id 
         ''', product_id=product_id)
-        row = rows[0]
-        return dict(seller_id=row[0], quantity=row[1], seller_name=row[2]) if rows else None
+        return [dict(
+            seller_id=row[0],
+            quantity=row[1],
+            seller_name=row[2]
+        ) for row in rows] if rows else []
     # @staticmethod
     # def add_to_inventory(seller_id, product_id, quantity):
     #     try:

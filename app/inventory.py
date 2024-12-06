@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for
 from flask import current_app as app
+from flask_login import current_user, login_required
 
 from .models.user import User
 from .models.inventory import Inventory
@@ -34,9 +35,10 @@ def search():
 
 
 @bp.route('/add_inventory', methods=['GET', 'POST'])
+@login_required
 def add_inventory():
     try:
-        user_id = request.cookies.get('id')  # Assuming the user ID is stored in cookies
+        user_id = current_user.id
         if not user_id:
             return jsonify({"error": "User ID not found. Please log in."}), 400
 
