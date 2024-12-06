@@ -142,15 +142,31 @@ class Inventory:
         print(rows)
         row = rows[0]
         return dict(seller_id=row[0], quantity=row[1], seller_name=row[2]) if rows else None
-    # @staticmethod
-    # def add_to_inventory(seller_id, product_id, quantity):
-    #     try:
-    #         app.db.execute('''
-    #         INSERT INTO Inventory (seller_id, product_id, quantity)
-    #         VALUES (:seller_id, :product_id, :quantity)
-    #         RETURNING inventory_id
-    #         ''', seller_id=seller_id, product_id=product_id, quantity=quantity)
-    #         return {"product_id": product_id, "seller_id": seller_id, "quantity": quantity}
-    #     except Exception as e:
-    #         print(str(e))
-    #         return None
+
+
+    @staticmethod
+    def get_completed_sales_by_product(seller_id):
+        try:
+            print("yay")
+            # Fetch inventory details
+            inventory = Inventory.get(seller_id)
+            product_sales = []
+
+            for item in inventory:
+                # Fetch count of completed sales for the product
+                rows = app.db.execute('''
+                    SELECT COUNT(*) AS completed_sales
+                    FROM orderitems
+                    WHERE product_id = :product_id AND seller_id = :seller_id AND status = 'Complete'
+                ''', product_id=item['product_id'], seller_id=seller_id)
+                
+                completed_sales = rows[0][0] if rows else 0
+                product_sales.append({
+                    "product_name": item['product_name'],
+                    "completed_sales": completed_sales
+                })
+
+            return product_sales
+        except Exception as e:
+            print(f"Error fetching completed sales by product: {e}")
+            return []
