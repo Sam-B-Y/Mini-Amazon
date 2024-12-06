@@ -11,9 +11,9 @@
         <a href="/category/{{product.category_name}}">{{ product.category_name }}</a>
         <br>
         
-Sold by: <button class="btn btn-link" onclick="redirectToSellerPage('{{ inventory.seller_id }}')">
-  {{ inventory.seller_name }}
-</button> <br> Available Quantity: {{ inventory.quantity }}
+Sold by: {% for inv in inventory %} <a href="/user/{{ inv.seller_id }}" class="btn btn-link">{{ inv.seller_name }}</a> {% endfor %}
+  
+      <br> 
       </p>
       <p class="rating">
       <div class="star-rating">
