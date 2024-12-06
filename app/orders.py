@@ -7,26 +7,38 @@ bp = Blueprint('orders', __name__)
 @bp.route('/api/seller_orders', methods=['GET'])
 def seller_orders():
     try:
+        print("yay")
         if not current_user.is_authenticated:
             return jsonify({"error": "User not logged in."}), 401
 
         seller_id = current_user.id
-        search_query = request.args.get('search', "")
-        status_filter = request.args.get('status', "")
+        search_query = request.args.get('search', "").strip()
+        status_filter = request.args.get('status', "All").strip()
 
-        if status_filter == "All":
-            orders = Purchase.get_orders_by_seller(seller_id, search_query)
-        else:
-            orders = Purchase.get_orders_by_seller(seller_id, search_query, status_filter)
+        # Fetch order items by seller
+        order_items = Purchase.get_order_items_by_seller(seller_id, search_query, status_filter)
 
-        # Ensure orders are sorted by 'order_id'
-        orders = sorted(orders, key=lambda x: x['order_id'])
+        # Transform data for the response
+        transformed_items = [
+            {
+                'order_id': item['order_id'],
+                'product_id': item['product_id'],
+                'quantity': item['quantity'],
+                'unit_price': item['unit_price'],
+                'status': item['status'],
+                'buyer_name': item['buyer_name'],
+                'buyer_address': item['buyer_address'],
+                'ordered_time': item['ordered_time']
+            }
+            for item in order_items
+        ]
 
-        return jsonify({"orders": orders}), 200
+        return jsonify({"orderItems": transformed_items}), 200
 
     except Exception as e:
         print(f"Error fetching seller orders: {e}")
         return jsonify({"error": "An unexpected error occurred."}), 500
+
 
 
 

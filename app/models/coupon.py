@@ -94,3 +94,13 @@ class Coupon:
         WHERE ac.user_id = :user_id
         """, user_id=user_id)
         return [Coupon(*row) for row in rows]
+    
+    @staticmethod
+    def get_order_coupons(order_id):
+        rows = app.db.execute("""
+        SELECT c.coupon_id, c.name, c.categories, c.discount, c.expiry_date
+        FROM AppliedCoupons ac
+        JOIN Coupons c ON ac.coupon_id = c.coupon_id
+        WHERE ac.order_id = :order_id
+        """, order_id=order_id)
+        return [Coupon(*row) for row in rows]

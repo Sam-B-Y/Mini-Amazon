@@ -4,38 +4,69 @@
 <div class="container my-5">
   <h3>Purchase History</h3>
   <div class="order-history">
-    {% if order_history %}
-    {% for purchase in order_history %}
+    {% if orders %} {% for purchase in orders %}
     <div class="card mb-4">
       <div class="card-header d-flex justify-content-between">
-        <span class="text-muted">Order Placed: {{ purchase.ordered_time }}</span>
-        <span class="text-muted">Total: ${{ purchase.price }}</span>
+        <span class="text-muted"
+          >Order Placed: {{ purchase.ordered_time }}</span
+        >
+        <div>
+          {% if purchase.coupons %}
+          <span class="text-muted"
+            >Cost before Coupons: ${{ purchase.price }}</span
+          >
+          {% endif %}
+          <span class="text-muted">Total: ${{ purchase.final_price }}</span>
+        </div>
       </div>
       <div class="card-body">
+        {% for item in purchase['items'] %}
         <div class="row">
           <div class="col-md-2">
-            <img src="{{ purchase.image_url }}" alt="{{ purchase.name }}" class="img-fluid rounded"
-              style="display:inline-block;width:100px;height:100px;overflow:hidden;" />
+            <img
+              src="{{ item.image_url }}"
+              alt="{{ item.name }}"
+              class="img-fluid rounded"
+              style="
+                display: inline-block;
+                width: 100px;
+                height: 100px;
+                overflow: hidden;
+              "
+            />
           </div>
           <div class="col-md-8">
-            <h5>{{ purchase.name }}</h5>
-            <p class="text-muted">{{ purchase.description|truncate(255) }}</p>
-            <p>Category: {{ purchase.category_name }}</p>
-            <p>Quantity: {{ purchase.quantity }}</p>
-            <p>Status: {{ purchase.status }}</p>
+            <h5>{{ item.name }}</h5>
+            <p class="text-muted">{{ item.description|truncate(255) }}</p>
+            <p>Category: {{ item.category_name }}</p>
+            <p>Quantity: {{ item.quantity }}</p>
+            <p>Status: {{ item.status }}</p>
           </div>
           <div class="col-md-2 text-end">
-            <a href="/user/{{ purchase.seller_id }}" class="btn btn-link">View Seller</a>
-            <a href="/products/{{ purchase.product_id }}" class="btn btn-link">View Product</a>
+            <button
+              class="btn btn-link"
+              onclick="redirectToSellerPage('{{ item.seller_id }}')"
+            >
+              View Seller
+            </button>
+            <a href="/products/{{ item.product_id }}" class="btn btn-link"
+              >View Product</a
+            >
+            <button
+              class="btn btn-link"
+              onclick="openReviewModal('{{ item.product_id }}', '{{ item.name }}', '{{ item.seller_id }}')"
+            >
+              Write a Review
+            </button>
           </div>
         </div>
+        {% endfor %} {% if purchase.coupons %} {% for coupon in purchase.coupons
+        %}
+        <p>Coupon: {{ coupon.name }}</p>
+        {% endfor %} {% endif %}
       </div>
       <div class="card-footer d-flex justify-content-between">
         <p>Order ID: {{purchase.order_id}}</p>
-        <button class="btn btn-primary btn-sm"
-          onclick="openReviewModal('{{ purchase.product_id }}', '{{ purchase.name }}', '{{ purchase.seller_id}}')">
-          Write a Review
-        </button>
       </div>
     </div>
     {% endfor %}
@@ -57,13 +88,23 @@
     {% endif %}
   </div>
 </div>
-
-<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+<div
+  class="modal fade"
+  id="reviewModal"
+  tabindex="-1"
+  aria-labelledby="reviewModalLabel"
+  aria-hidden="true"
+>
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="reviewModalLabel">Write a Review</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
@@ -73,7 +114,13 @@
           <input type="hidden" name="seller_id" id="reviewSellerId" />
           <div class="mb-3">
             <label for="reviewContent" class="form-label">Review</label>
-            <textarea class="form-control" id="reviewContent" name="comment" rows="3" required></textarea>
+            <textarea
+              class="form-control"
+              id="reviewContent"
+              name="comment"
+              rows="3"
+              required
+            ></textarea>
           </div>
           <div class="mb-3">
             <label class="form-label">Rating</label>
@@ -137,7 +184,9 @@
         s.classList.remove("checked");
       });
       for (let i = 0; i < rating; i++) {
-        document.querySelectorAll("#starRating .fa-star")[i].classList.add("checked");
+        document
+          .querySelectorAll("#starRating .fa-star")
+          [i].classList.add("checked");
       }
     });
   });

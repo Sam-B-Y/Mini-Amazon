@@ -199,3 +199,51 @@ ORDER BY ordered_time DESC
         except Exception as e:
             print(f"Error fetching line items: {e}")
             return []
+    @staticmethod
+    def get_order_items_by_seller(seller_id, search_query="", status_filter="All"):
+        try:
+            print("yay")
+            query = '''
+                SELECT oi.order_id, oi.product_id, oi.quantity, oi.unit_price, oi.status,
+                    o.ordered_time, u.full_name AS buyer_name, u.address AS buyer_address
+                FROM orderitems oi
+                JOIN orders o ON oi.order_id = o.order_id
+                JOIN users u ON o.user_id = u.user_id
+                WHERE oi.seller_id = :seller_id
+            '''
+            params = {"seller_id": seller_id}
+
+            # Apply status filtering
+            if status_filter != "All":
+                query += " AND oi.status = :status"
+                params["status"] = status_filter
+
+            # Apply search filtering
+            if search_query:
+                query += '''
+                    AND (
+                        oi.order_id::TEXT ILIKE :search_query OR
+                        u.full_name ILIKE :search_query OR
+                        u.address ILIKE :search_query
+                    )
+                '''
+                params["search_query"] = f"%{search_query}%"
+
+            rows = app.db.execute(query, **params)
+
+            return [
+                {
+                    'order_id': row[0],
+                    'product_id': row[1],
+                    'quantity': row[2],
+                    'unit_price': row[3],
+                    'status': row[4],
+                    'ordered_time': row[5],
+                    'buyer_name': row[6],
+                    'buyer_address': row[7]
+                }
+                for row in rows
+            ]
+        except Exception as e:
+            print(f"Error fetching order items by seller: {e}")
+            return []
